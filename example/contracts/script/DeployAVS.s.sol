@@ -78,10 +78,18 @@ contract DeployAVS is Script, Test {
         // read the json file
         string memory inputConfig = vm.readFile(inputConfigPath);
         bytes memory data = vm.parseJson(inputConfig);
-        EigenlayerDeployment memory eigenlayerDeployment = abi.decode(data, (EigenlayerDeployment));
+        EigenlayerDeployment memory eigenlayerDeployment = EigenlayerDeployment({
+            allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
+            delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
+            permissionController: stdJson.readAddress(inputConfig, ".permissionController"),
+            rewardsCoordinator: stdJson.readAddress(inputConfig, ".rewardsCoordinator"),
+            avsDirectory: stdJson.readAddress(inputConfig, ".avsDirectory")
+        });
 
+
+        emit log_named_address("allocation manager", eigenlayerDeployment.allocationManager);
         emit log_named_address("delegation manager", eigenlayerDeployment.delegationManager);
-        emit log_named_address("allocation Manager", eigenlayerDeployment.allocationManager);
+        emit log_named_address("permission controller", eigenlayerDeployment.permissionController);
         emit log_named_address("rewards coordinator", eigenlayerDeployment.rewardsCoordinator);
         emit log_named_address("avs directory", eigenlayerDeployment.avsDirectory);
 
