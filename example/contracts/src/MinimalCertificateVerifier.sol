@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 import {BLSSignatureChecker} from "eigenlayer-middleware/BLSSignatureChecker.sol";
-import {IRegistryCoordinator} from "eigenlayer-middleware/interfaces/IRegistryCoordinator.sol";
+import {ISlashingRegistryCoordinator} from "eigenlayer-middleware/interfaces/ISlashingRegistryCoordinator.sol";
 
 contract MinimalCertificateVerifier is BLSSignatureChecker {
 
@@ -21,9 +21,9 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
     mapping(bytes32 => VerificationRecord) public verificationRecords;
 
     constructor(
-        IRegistryCoordinator __registryCoordinator
+        ISlashingRegistryCoordinator __slashingRegistryCoordinator
     )
-        BLSSignatureChecker(__registryCoordinator)
+        BLSSignatureChecker(__slashingRegistryCoordinator)
     { }
 
     function verifyCertificate(
