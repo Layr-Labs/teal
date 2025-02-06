@@ -3,7 +3,7 @@
   "avsPauserReg": "0xf386cF727dcd8C153E6af5FaE48bE965DCfF71Fe",
   "avsProxyAdmin": "0x522E6E96479fAe83bBEE35F3932ebf7B2f42DB11",
   "certificateVerifier": "0x0E708E5B54049e880472F2ec13CF3584e8FAFbA0",
-  "deploymentBlock": 3298491,
+  "deploymentBlock": 3298564,
   "indexRegistry": "0x2E0a4BEFcf44D089e52ff35068F7b1F8a2b83674",
   "object": "deployment",
   "operatorStateRetriever": "0x331D749fCf459785B4919a5F2612FDF29aCC3c23",
