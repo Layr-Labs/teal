@@ -175,6 +175,26 @@ contract DeployAVS is Script, Test {
             address(socketRegistryImplementation)
         );
 
+        serviceManagerImplementation = new MinimalServiceManager(
+            IAVSDirectory(eigenlayerDeployment.avsDirectory),
+            IRewardsCoordinator(eigenlayerDeployment.rewardsCoordinator),
+            IRegistryCoordinator(address(slashingRegistryCoordinator)),
+            IStakeRegistry(address(stakeRegistry)),
+            IPermissionController(address(eigenlayerDeployment.permissionController)),
+            IAllocationManager(eigenlayerDeployment.allocationManager)
+        );
+
+        // Initialize ServiceManagerBase
+        avsProxyAdmin.upgradeAndCall(
+            ITransparentUpgradeableProxy(payable(address(serviceManager))),
+            address(serviceManagerImplementation),
+            abi.encodeWithSelector(
+                MinimalServiceManager.initialize.selector,
+                msg.sender,
+                msg.sender
+            )
+        );
+
         slashingRegistryCoordinatorImplementation = new SlashingRegistryCoordinator(
                 stakeRegistry,
                 apkRegistry,
@@ -212,37 +232,50 @@ contract DeployAVS is Script, Test {
                 address(slashingRegistryCoordinatorImplementation),
                 abi.encodeWithSelector(
                     SlashingRegistryCoordinator.initialize.selector,
-                    msg.sender,
-                    msg.sender,
-                    msg.sender,
-                    IPauserRegistry(address(avsPauserReg)),
+                    msg.sender, // initial owner
+                    msg.sender, // churn approver
+                    msg.sender, // ejector
                     0, // initial paused status
-                    operatorSetParams, 
-                    minimumStakeForQuourm,
-                    strategyAndWeightingMultipliers 
+                    address(serviceManager) // accountIdentifier
                 )
             );
+            emit log_named_address("avsProxyAdmin", address(avsProxyAdmin));
+            emit log_named_address("avsPauserReg", address(avsPauserReg));
+            emit log_named_address("emptyContract", address(emptyContract));
+            emit log_named_address("apkRegistry", address(apkRegistry));
+            emit log_named_address("serviceManager", address(serviceManager));
+            emit log_named_address("certificateVerifier", address(certificateVerifier));
+            emit log_named_address("slashingRegistryCoordinator", address(slashingRegistryCoordinator));
+            emit log_named_address("indexRegistry", address(indexRegistry));
+            emit log_named_address("stakeRegistry", address(stakeRegistry));
+            emit log_named_address("socketRegistry", address(socketRegistry));
+            emit log_named_address("operatorStateRetriever", address(operatorStateRetriever));
+
+            emit log_named_address("apkRegistryImplementation", address(apkRegistryImplementation));
+            emit log_named_address("serviceManagerImplementation", address(serviceManagerImplementation));
+            emit log_named_address("certificateVerifierImplementation", address(certificateVerifierImplementation));
+            emit log_named_address("slashingRegistryCoordinatorImplementation", address(slashingRegistryCoordinatorImplementation));
+            emit log_named_address("indexRegistryImplementation", address(indexRegistryImplementation));
+            emit log_named_address("stakeRegistryImplementation", address(stakeRegistryImplementation));
+            emit log_named_address("socketRegistryImplementation", address(socketRegistryImplementation));
+
+             // give slashingregistrycoorindator permission to createTotalDelegatedStakeQuorum
+             serviceManager.setAppointee(
+                address(slashingRegistryCoordinator),
+                eigenlayerDeployment.allocationManager,
+                IAllocationManager(eigenlayerDeployment.allocationManager).createOperatorSets.selector
+             );
+
+            // serviceManager.addPendingAdmin(msg.sender);
+            for (uint i = 0; i < strategies.length; i++) {
+                slashingRegistryCoordinator.createTotalDelegatedStakeQuorum(
+                operatorSetParams[i],
+                minimumStakeForQuourm[i],
+                strategyAndWeightingMultipliers[i]
+            );
+
+            }   
         }
-
-        serviceManagerImplementation = new MinimalServiceManager(
-            IAVSDirectory(eigenlayerDeployment.avsDirectory),
-            IRewardsCoordinator(eigenlayerDeployment.rewardsCoordinator),
-            IRegistryCoordinator(address(slashingRegistryCoordinator)),
-            IStakeRegistry(address(stakeRegistry)),
-            IPermissionController(address(eigenlayerDeployment.permissionController)),
-            IAllocationManager(eigenlayerDeployment.allocationManager)
-        );
-
-        // Initialize ServiceManagerBase
-        avsProxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(payable(address(serviceManager))),
-            address(serviceManagerImplementation),
-            abi.encodeWithSelector(
-                MinimalServiceManager.initialize.selector,
-                msg.sender,
-                msg.sender
-            )
-        );
 
         certificateVerifierImplementation = new MinimalCertificateVerifier(
             slashingRegistryCoordinator

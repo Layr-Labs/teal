@@ -14,13 +14,15 @@ type EigenLayerDeployment struct {
 	AvsDirectory          common.Address `json:"avsDirectory"`
 	RewardsCoordinator    common.Address `json:"rewardsCoordinator"`
 	PermissionsController common.Address `json:"permissionsController"`
+	AllocationManager     common.Address `json:"allocationManager"`
 }
 
 type AVSDeployment struct {
-	DeploymentBlock        uint64         `json:"deploymentBlock"`
-	CertificateVerifier    common.Address `json:"certificateVerifier"`
-	RegistryCoordinator    common.Address `json:"registryCoordinator"`
-	OperatorStateRetriever common.Address `json:"operatorStateRetriever"`
+	DeploymentBlock             uint64         `json:"deploymentBlock"`
+	CertificateVerifier         common.Address `json:"certificateVerifier"`
+	SlashingRegistryCoordinator common.Address `json:"slashingRegistryCoordinator"`
+	OperatorStateRetriever      common.Address `json:"operatorStateRetriever"`
+	ServiceManager              common.Address `json:"serviceMaanger"`
 }
 
 func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
@@ -64,7 +66,8 @@ func ReadAVSDeployment(path string) (AVSDeployment, error) {
 
 func (d AVSDeployment) ToConfig() avsregistry.Config {
 	return avsregistry.Config{
-		RegistryCoordinatorAddress:    d.RegistryCoordinator,
+		RegistryCoordinatorAddress:    d.SlashingRegistryCoordinator,
 		OperatorStateRetrieverAddress: d.OperatorStateRetriever,
+		ServiceManagerAddress:         d.ServiceManager,
 	}
 }
