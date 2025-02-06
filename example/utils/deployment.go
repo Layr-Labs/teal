@@ -10,17 +10,19 @@ import (
 )
 
 type EigenLayerDeployment struct {
-	DelegationManager     common.Address `json:"delegationManager"`
-	AvsDirectory          common.Address `json:"avsDirectory"`
-	RewardsCoordinator    common.Address `json:"rewardsCoordinator"`
-	PermissionsController common.Address `json:"permissionsController"`
+	DelegationManager    common.Address `json:"delegationManager"`
+	AvsDirectory         common.Address `json:"avsDirectory"`
+	RewardsCoordinator   common.Address `json:"rewardsCoordinator"`
+	PermissionController common.Address `json:"permissionController"`
+	AllocationManager    common.Address `json:"allocationManager"`
 }
 
 type AVSDeployment struct {
-	DeploymentBlock        uint64         `json:"deploymentBlock"`
-	CertificateVerifier    common.Address `json:"certificateVerifier"`
-	RegistryCoordinator    common.Address `json:"registryCoordinator"`
-	OperatorStateRetriever common.Address `json:"operatorStateRetriever"`
+	DeploymentBlock             uint64         `json:"deploymentBlock"`
+	CertificateVerifier         common.Address `json:"certificateVerifier"`
+	SlashingRegistryCoordinator common.Address `json:"slashingRegistryCoordinator"`
+	OperatorStateRetriever      common.Address `json:"operatorStateRetriever"`
+	ServiceManager              common.Address `json:"serviceManager"`
 }
 
 func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
@@ -37,11 +39,12 @@ func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
 	if err != nil {
 		return elcontracts.Config{}, err
 	}
+
 	return elcontracts.Config{
 		DelegationManagerAddress:     deployment.DelegationManager,
 		AvsDirectoryAddress:          deployment.AvsDirectory,
 		RewardsCoordinatorAddress:    deployment.RewardsCoordinator,
-		PermissionsControllerAddress: deployment.PermissionsController,
+		PermissionsControllerAddress: deployment.PermissionController,
 	}, nil
 }
 
@@ -64,7 +67,8 @@ func ReadAVSDeployment(path string) (AVSDeployment, error) {
 
 func (d AVSDeployment) ToConfig() avsregistry.Config {
 	return avsregistry.Config{
-		RegistryCoordinatorAddress:    d.RegistryCoordinator,
+		RegistryCoordinatorAddress:    d.SlashingRegistryCoordinator,
 		OperatorStateRetrieverAddress: d.OperatorStateRetriever,
+		ServiceManagerAddress:         d.ServiceManager,
 	}
 }

@@ -74,6 +74,7 @@ func TestIntegrationBlsAgg(t *testing.T) {
 			OperatorStateRetrieverAddr: contractAddrs.OperatorStateRetriever.String(),
 			AvsName:                    "avs",
 			PromMetricsIpPortAddress:   "localhost:9090",
+			ServiceManagerAddress:      contractAddrs.ServiceManager.String(),
 		}, ecdsaPrivKey, logger)
 		require.NoError(t, err)
 		avsWriter := avsClients.AvsRegistryChainWriter
