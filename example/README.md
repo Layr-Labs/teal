@@ -42,7 +42,7 @@ This will register your operator with the AVS and EigenLayer.
 
 Run the operator first.
 ```
-./start-nodes.sh --rpc-url $ETH_RPC_URL
+./start_nodes.sh --rpc-url $ETH_RPC_URL
 ```
 
 In a seperate terminal, run the aggregator.

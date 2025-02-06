@@ -10,11 +10,11 @@ import (
 )
 
 type EigenLayerDeployment struct {
-	DelegationManager     common.Address `json:"delegationManager"`
-	AvsDirectory          common.Address `json:"avsDirectory"`
-	RewardsCoordinator    common.Address `json:"rewardsCoordinator"`
-	PermissionsController common.Address `json:"permissionsController"`
-	AllocationManager     common.Address `json:"allocationManager"`
+	DelegationManager    common.Address `json:"delegationManager"`
+	AvsDirectory         common.Address `json:"avsDirectory"`
+	RewardsCoordinator   common.Address `json:"rewardsCoordinator"`
+	PermissionController common.Address `json:"permissionController"`
+	AllocationManager    common.Address `json:"allocationManager"`
 }
 
 type AVSDeployment struct {
@@ -22,7 +22,7 @@ type AVSDeployment struct {
 	CertificateVerifier         common.Address `json:"certificateVerifier"`
 	SlashingRegistryCoordinator common.Address `json:"slashingRegistryCoordinator"`
 	OperatorStateRetriever      common.Address `json:"operatorStateRetriever"`
-	ServiceManager              common.Address `json:"serviceMaanger"`
+	ServiceManager              common.Address `json:"serviceManager"`
 }
 
 func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
@@ -39,11 +39,12 @@ func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
 	if err != nil {
 		return elcontracts.Config{}, err
 	}
+
 	return elcontracts.Config{
 		DelegationManagerAddress:     deployment.DelegationManager,
 		AvsDirectoryAddress:          deployment.AvsDirectory,
 		RewardsCoordinatorAddress:    deployment.RewardsCoordinator,
-		PermissionsControllerAddress: deployment.PermissionsController,
+		PermissionsControllerAddress: deployment.PermissionController,
 	}, nil
 }
 

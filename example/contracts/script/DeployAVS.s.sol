@@ -10,6 +10,7 @@ import {IDelegationManager} from "eigenlayer-core/contracts/interfaces/IDelegati
 import {IAVSDirectory} from "eigenlayer-core/contracts/interfaces/IAVSDirectory.sol";
 import {IRewardsCoordinator} from "eigenlayer-core/contracts/interfaces/IRewardsCoordinator.sol";
 import {IAllocationManager} from "eigenlayer-core/contracts/interfaces/IAllocationManager.sol";
+import {IAVSRegistrar} from "eigenlayer-core/contracts/interfaces/IAVSRegistrar.sol";
 import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
 
 
@@ -239,34 +240,26 @@ contract DeployAVS is Script, Test {
                     address(serviceManager) // accountIdentifier
                 )
             );
-            emit log_named_address("avsProxyAdmin", address(avsProxyAdmin));
-            emit log_named_address("avsPauserReg", address(avsPauserReg));
-            emit log_named_address("emptyContract", address(emptyContract));
-            emit log_named_address("apkRegistry", address(apkRegistry));
-            emit log_named_address("serviceManager", address(serviceManager));
-            emit log_named_address("certificateVerifier", address(certificateVerifier));
-            emit log_named_address("slashingRegistryCoordinator", address(slashingRegistryCoordinator));
-            emit log_named_address("indexRegistry", address(indexRegistry));
-            emit log_named_address("stakeRegistry", address(stakeRegistry));
-            emit log_named_address("socketRegistry", address(socketRegistry));
-            emit log_named_address("operatorStateRetriever", address(operatorStateRetriever));
 
-            emit log_named_address("apkRegistryImplementation", address(apkRegistryImplementation));
-            emit log_named_address("serviceManagerImplementation", address(serviceManagerImplementation));
-            emit log_named_address("certificateVerifierImplementation", address(certificateVerifierImplementation));
-            emit log_named_address("slashingRegistryCoordinatorImplementation", address(slashingRegistryCoordinatorImplementation));
-            emit log_named_address("indexRegistryImplementation", address(indexRegistryImplementation));
-            emit log_named_address("stakeRegistryImplementation", address(stakeRegistryImplementation));
-            emit log_named_address("socketRegistryImplementation", address(socketRegistryImplementation));
+            // set AVS Registrar on AllocationManager to SlashingRegistryCoordinator
+            serviceManager.setAppointee(
+                msg.sender,
+                eigenlayerDeployment.allocationManager,
+                IAllocationManager(eigenlayerDeployment.allocationManager).setAVSRegistrar.selector
+            );
 
-             // give slashingregistrycoorindator permission to createTotalDelegatedStakeQuorum
+            IAllocationManager(eigenlayerDeployment.allocationManager).setAVSRegistrar(
+                address(serviceManager),
+                IAVSRegistrar(slashingRegistryCoordinator)
+            );
+
+             // give slashingregistrycoordindator permission to createTotalDelegatedStakeQuorum
              serviceManager.setAppointee(
                 address(slashingRegistryCoordinator),
                 eigenlayerDeployment.allocationManager,
                 IAllocationManager(eigenlayerDeployment.allocationManager).createOperatorSets.selector
              );
 
-            // serviceManager.addPendingAdmin(msg.sender);
             for (uint i = 0; i < strategies.length; i++) {
                 slashingRegistryCoordinator.createTotalDelegatedStakeQuorum(
                 operatorSetParams[i],

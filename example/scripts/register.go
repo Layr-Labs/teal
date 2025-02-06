@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/Layr-Labs/eigensdk-go/chainio/clients/avsregistry"
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/elcontracts"
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/wallet"
 	"github.com/Layr-Labs/eigensdk-go/chainio/txmgr"
@@ -18,6 +17,7 @@ import (
 	"github.com/Layr-Labs/teal/example/utils"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/urfave/cli/v2"
@@ -136,6 +136,10 @@ func start(c *cli.Context) error {
 		panic(err)
 	}
 
+	if isRegisteredWithEL {
+		logger.Info("Operator already registered with EigenLayer", "address", operator.Address)
+	}
+
 	if !isRegisteredWithEL {
 		reciept, err := elWriter.RegisterAsOperator(context.Background(), operator, true)
 		if err != nil {
@@ -149,26 +153,25 @@ func start(c *cli.Context) error {
 		}
 	}
 
-	avsWriter, err := avsregistry.NewWriterFromConfig(
-		avsDeployment.ToConfig(),
-		client,
-		txManager,
-		logger,
-	)
-	if err != nil {
-		panic(err)
+	registrationRequest := elcontracts.RegistrationRequest{
+		OperatorAddress: common.HexToAddress(operator.Address),
+		AVSAddress:      avsDeployment.ServiceManager,
+		OperatorSetIds:  []uint32{0},
+		WaitForReceipt:  true,
+		BlsKeyPair:      utils.NewBlsKeyPairPanics(c.String(BlsPrivateKeyFlag.Name)),
+		Socket:          c.String(SocketFlag.Name),
 	}
 
-	reciept, err := avsWriter.RegisterOperator(
+	// register for operator set through allocationManager
+	reciept, err := elWriter.RegisterForOperatorSets(
 		context.Background(),
-		ecdsaPrivateKey,
-		utils.NewBlsKeyPairPanics(c.String(BlsPrivateKeyFlag.Name)),
-		types.QuorumNums{0},
-		c.String(SocketFlag.Name),
-		true,
+		avsDeployment.SlashingRegistryCoordinator,
+		registrationRequest,
 	)
+
 	if err != nil {
-		panic(err)
+		logger.Error("Failed to register operator with AVS", "error", err)
+		return err
 	}
 
 	if reciept.Status == 0 {
