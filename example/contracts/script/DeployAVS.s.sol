@@ -78,7 +78,6 @@ contract DeployAVS is Script, Test {
     ) external {
         // read the json file
         string memory inputConfig = vm.readFile(inputConfigPath);
-        bytes memory data = vm.parseJson(inputConfig);
         EigenlayerDeployment memory eigenlayerDeployment = EigenlayerDeployment({
             allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
             delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
@@ -179,8 +178,8 @@ contract DeployAVS is Script, Test {
         serviceManagerImplementation = new MinimalServiceManager(
             IAVSDirectory(eigenlayerDeployment.avsDirectory),
             IRewardsCoordinator(eigenlayerDeployment.rewardsCoordinator),
-            IRegistryCoordinator(address(slashingRegistryCoordinator)),
-            IStakeRegistry(address(stakeRegistry)),
+            slashingRegistryCoordinator,
+            stakeRegistry,
             IPermissionController(address(eigenlayerDeployment.permissionController)),
             IAllocationManager(eigenlayerDeployment.allocationManager)
         );
@@ -262,11 +261,10 @@ contract DeployAVS is Script, Test {
 
             for (uint i = 0; i < strategies.length; i++) {
                 slashingRegistryCoordinator.createTotalDelegatedStakeQuorum(
-                operatorSetParams[i],
-                minimumStakeForQuourm[i],
-                strategyAndWeightingMultipliers[i]
-            );
-
+                    operatorSetParams[i],
+                    minimumStakeForQuourm[i],
+                    strategyAndWeightingMultipliers[i]
+                );
             }   
         }
 
