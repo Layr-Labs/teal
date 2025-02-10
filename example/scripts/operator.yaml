@@ -2,7 +2,7 @@ operator:
     address: <OPERATOR_ADDRESS>
     delegation_approver_address: "0x0000000000000000000000000000000000000000"
     metadata_url: "https://madhur-test-public.s3.us-east-2.amazonaws.com/metadata.json"
-    allocation_delay: 1200
+    allocation_delay: 0
 el_delegation_manager_address: 0xA44151489861Fe9e3055d95adC98FbD462B948e7
 eth_rpc_url: <ETH_RPC_URL>
 chain_id: 17000
