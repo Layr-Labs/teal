@@ -151,7 +151,7 @@ contract DeployAVS is Script, Test {
             slashingRegistryCoordinator,
             IDelegationManager(eigenlayerDeployment.delegationManager),
             IAVSDirectory(eigenlayerDeployment.avsDirectory),
-            IAllocationManager(address(0))
+            IAllocationManager(eigenlayerDeployment.allocationManager)
         );
 
         avsProxyAdmin.upgrade(
@@ -264,7 +264,7 @@ contract DeployAVS is Script, Test {
                     operatorSetParams[i],
                     minimumStakeForQuourm[i],
                     strategyAndWeightingMultipliers[i],
-                    30 seconds // lookahead
+                    1
                 );
             }   
         }
