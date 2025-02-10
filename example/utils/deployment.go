@@ -18,11 +18,12 @@ type EigenLayerDeployment struct {
 }
 
 type AVSDeployment struct {
-	DeploymentBlock             uint64         `json:"deploymentBlock"`
-	CertificateVerifier         common.Address `json:"certificateVerifier"`
-	SlashingRegistryCoordinator common.Address `json:"slashingRegistryCoordinator"`
-	OperatorStateRetriever      common.Address `json:"operatorStateRetriever"`
-	ServiceManager              common.Address `json:"serviceManager"`
+	DeploymentBlock             uint64           `json:"deploymentBlock"`
+	CertificateVerifier         common.Address   `json:"certificateVerifier"`
+	SlashingRegistryCoordinator common.Address   `json:"slashingRegistryCoordinator"`
+	OperatorStateRetriever      common.Address   `json:"operatorStateRetriever"`
+	ServiceManager              common.Address   `json:"serviceManager"`
+	Strategies                  []common.Address `json:"strategies"`
 }
 
 func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {

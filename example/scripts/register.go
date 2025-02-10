@@ -9,6 +9,7 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/elcontracts"
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/wallet"
 	"github.com/Layr-Labs/eigensdk-go/chainio/txmgr"
+	contractAllocationManager "github.com/Layr-Labs/eigensdk-go/contracts/bindings/AllocationManager"
 	"github.com/Layr-Labs/eigensdk-go/logging"
 	"github.com/Layr-Labs/eigensdk-go/metrics"
 	rpccalls "github.com/Layr-Labs/eigensdk-go/metrics/collectors/rpc_calls"
@@ -153,6 +154,23 @@ func start(c *cli.Context) error {
 		}
 	}
 
+	reciept, err := elWriter.ModifyAllocations(context.Background(), common.HexToAddress(operator.Address), []contractAllocationManager.IAllocationManagerTypesAllocateParams{
+		{
+			OperatorSet: contractAllocationManager.OperatorSet{
+				Avs: avsDeployment.ServiceManager,
+				Id:  0,
+			},
+			Strategies:    avsDeployment.Strategies,
+			NewMagnitudes: []uint64{100000},
+		},
+	}, true)
+	if err != nil {
+		logger.Error("Failed to modify allocations", "error", err)
+		return err
+	} else {
+		logger.Info("Modified allocations", "tx", reciept.TxHash.Hex())
+	}
+
 	registrationRequest := elcontracts.RegistrationRequest{
 		OperatorAddress: common.HexToAddress(operator.Address),
 		AVSAddress:      avsDeployment.ServiceManager,
@@ -163,7 +181,7 @@ func start(c *cli.Context) error {
 	}
 
 	// register for operator set through allocationManager
-	reciept, err := elWriter.RegisterForOperatorSets(
+	reciept, err = elWriter.RegisterForOperatorSets(
 		context.Background(),
 		avsDeployment.SlashingRegistryCoordinator,
 		registrationRequest,

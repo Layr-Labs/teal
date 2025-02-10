@@ -260,10 +260,11 @@ contract DeployAVS is Script, Test {
              );
 
             for (uint i = 0; i < strategies.length; i++) {
-                slashingRegistryCoordinator.createTotalDelegatedStakeQuorum(
+                slashingRegistryCoordinator.createSlashableStakeQuorum(
                     operatorSetParams[i],
                     minimumStakeForQuourm[i],
-                    strategyAndWeightingMultipliers[i]
+                    strategyAndWeightingMultipliers[i],
+                    30 seconds // lookahead
                 );
             }   
         }
@@ -292,6 +293,11 @@ contract DeployAVS is Script, Test {
         vm.serializeAddress(output, "operatorStateRetriever", address(operatorStateRetriever));
         vm.serializeAddress(output, "avsProxyAdmin", address(avsProxyAdmin));
         vm.serializeAddress(output, "avsPauserReg", address(avsPauserReg));
+        address[] memory strategyAddresses = new address[](strategies.length);
+        for (uint i = 0; i < strategies.length; i++) {
+            strategyAddresses[i] = address(strategies[i]);
+        }
+        vm.serializeAddress(output, "strategies", strategyAddresses);
         vm.serializeUint(output, "deploymentBlock", deploymentBlock);
 
         string memory finalJson = vm.serializeString(output, "object", output);
