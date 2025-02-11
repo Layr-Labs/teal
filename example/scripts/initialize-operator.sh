@@ -131,28 +131,42 @@ fi
 # Install Go if not installed
 if ! command -v go &> /dev/null; then
     echo "Go is not installed"
+    
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         if [[ "$(uname -m)" == "arm64" ]]; then
             # M1/M2 Mac
-            curl -L https://go.dev/dl/go1.22.3.darwin-arm64.tar.gz | sudo tar -C /usr/local -xzf -
+            curl -L https://go.dev/dl/go1.22.3.darwin-arm64.tar.gz | tar -C "$HOME" -xzf -
         else
             # Intel Mac
-            curl -L https://go.dev/dl/go1.22.3.darwin-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+            curl -L https://go.dev/dl/go1.22.3.darwin-amd64.tar.gz | tar -C "$HOME" -xzf -
         fi
     else
         # Linux
         if [[ "$(uname -m)" == "aarch64" ]] || [[ "$(uname -m)" == "arm64" ]]; then
             # ARM64 processor
-            curl -L https://go.dev/dl/go1.22.3.linux-arm64.tar.gz | sudo tar -C /usr/local -xzf -
+            curl -L https://go.dev/dl/go1.22.3.linux-arm64.tar.gz | tar -C "$HOME" -xzf -
         else
             # AMD64/x86_64 processor
-            curl -L https://go.dev/dl/go1.22.3.linux-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+            curl -L https://go.dev/dl/go1.22.3.linux-amd64.tar.gz | tar -C "$HOME" -xzf -
         fi
     fi
 
-    # Add Go to PATH directly instead of relying on source
-    export PATH="$PATH:/usr/local/go/bin"
+    # Add Go to PATH based on current shell
+    case "$SHELL" in
+        */zsh)
+            echo "export PATH=\"$PATH:$HOME/go/bin\"" >> "$HOME/.zshrc"
+            ;;
+        */bash)
+            echo "export PATH=\"$PATH:$HOME/go/bin\"" >> "$HOME/.bashrc"
+            ;;
+        *)
+            echo "Warning: Unsupported shell ($SHELL). Please add $HOME/go/bin to your PATH manually."
+            ;;
+    esac
+
+    # Add to current session
+    export PATH="$PATH:$HOME/go/bin"
 fi
 
 ## Create a new ecdsa key
