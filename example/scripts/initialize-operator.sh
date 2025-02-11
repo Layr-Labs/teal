@@ -123,24 +123,7 @@ fi
 if ! command -v foundryup &> /dev/null; then
     echo "Foundry is not installed"
     curl -L https://foundry.paradigm.xyz | bash
-    # Source the appropriate shell config based on current shell
-    if [[ "$SHELL" == *"zsh"* ]]; then
-        if [ -f "$HOME/.zshrc" ]; then
-            source "$HOME/.zshrc"
-        fi
-    elif [[ "$SHELL" == *"bash"* ]]; then
-        if [ -f "$HOME/.bashrc" ]; then
-            source "$HOME/.bashrc"
-        fi
-    else
-        echo "Warning: Unsupported shell detected: $SHELL"
-        # Try to source either file if available as fallback
-        if [ -f "$HOME/.bashrc" ]; then
-            source "$HOME/.bashrc"
-        elif [ -f "$HOME/.zshrc" ]; then
-            source "$HOME/.zshrc"
-        fi
-    fi
+    export PATH="$HOME/.foundry/bin:$PATH"
     foundryup
 fi
 
@@ -167,33 +150,8 @@ if ! command -v go &> /dev/null; then
         fi
     fi
 
-    # Add Go to PATH if not already present
-    if ! grep -q "/usr/local/go/bin" "$HOME/.bashrc" && ! grep -q "/usr/local/go/bin" "$HOME/.zshrc"; then
-        # Add to both .bashrc and .zshrc to ensure it works in both shells
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.bashrc"
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.zshrc"
-        # Also add to current session
-        export PATH=$PATH:/usr/local/go/bin
-    fi
-fi
-
-# Source the appropriate shell config based on current shell
-if [[ "$SHELL" == *"zsh"* ]]; then
-    if [ -f "$HOME/.zshrc" ]; then
-        source "$HOME/.zshrc"
-    fi
-elif [[ "$SHELL" == *"bash"* ]]; then
-    if [ -f "$HOME/.bashrc" ]; then
-        source "$HOME/.bashrc"
-    fi
-else
-    echo "Warning: Unsupported shell detected: $SHELL"
-    # Try to source either file if available as fallback
-    if [ -f "$HOME/.bashrc" ]; then
-        source "$HOME/.bashrc"
-    elif [ -f "$HOME/.zshrc" ]; then
-        source "$HOME/.zshrc"
-    fi
+    # Add Go to PATH directly instead of relying on source
+    export PATH="$PATH:/usr/local/go/bin"
 fi
 
 ## Create a new ecdsa key
