@@ -98,6 +98,61 @@ if ! command -v $HOME/bin/eigenlayer &> /dev/null; then
     curl -sSfL https://raw.githubusercontent.com/layr-labs/eigenlayer-cli/master/scripts/install.sh | sh -s -- -b $HOME/bin v0.12.0-beta
 fi
 
+# Install jq
+if ! command -v jq &> /dev/null; then
+    echo "jq is not installed"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        brew install jq
+    else
+        # Linux
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y jq
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y jq
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y jq
+        else
+            echo "Could not install jq. Please install it manually."
+            exit 1
+        fi
+    fi
+fi
+
+# Install foundry toolchain if not installed
+if ! command -v foundryup &> /dev/null; then
+    echo "Foundry is not installed"
+    curl -L https://foundry.paradigm.xyz | bash
+    foundryup
+fi
+
+# Install Go if not installed
+if ! command -v go &> /dev/null; then
+    echo "Go is not installed"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        if [[ "$(uname -m)" == "arm64" ]]; then
+            # M1/M2 Mac
+            curl -L https://go.dev/dl/go1.22.3.darwin-arm64.tar.gz | sudo tar -C /usr/local -xzf -
+        else
+            # Intel Mac
+            curl -L https://go.dev/dl/go1.22.3.darwin-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+        fi
+    else
+        # Linux
+        curl -L https://go.dev/dl/go1.22.3.linux-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+    fi
+
+    # Add Go to PATH if not already present
+    if ! grep -q "/usr/local/go/bin" "$HOME/.bashrc" && ! grep -q "/usr/local/go/bin" "$HOME/.zshrc"; then
+        # Add to both .bashrc and .zshrc to ensure it works in both shells
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.bashrc"
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.zshrc"
+        # Also add to current session
+        export PATH=$PATH:/usr/local/go/bin
+    fi
+fi
+
 ## Create a new ecdsa key
 echo "" | $HOME/bin/eigenlayer keys create --key-type=ecdsa --insecure opr$ID > opr$ID.ecdsa.key.json
 ECDSA_PRIVATE_KEY=$(grep -o "//[[:space:]]*[0-9a-f]\{64\}[[:space:]]*//" opr$ID.ecdsa.key.json | tr -d '//' | tr -d ' ')
@@ -112,11 +167,19 @@ BLS_PRIVATE_KEY=$(grep -o "//[[:space:]]*[0-9]\{50,100\}[[:space:]]*//" opr$ID.b
 echo "BLS_PRIVATE_KEY=$BLS_PRIVATE_KEY"
 
 cp $SCRIPT_DIR/operator.yaml $SCRIPT_DIR/operator$ID.yaml
-sed -i '' "s/address: <OPERATOR_ADDRESS>/address: $OPERATOR_ADDRESS/" $SCRIPT_DIR/operator$ID.yaml
-
 echo $HOME
-sed -i '' "s|private_key_store_path: <PATH_TO_KEY>|private_key_store_path: $HOME/.eigenlayer/operator_keys/opr$ID.ecdsa.key.json|" $SCRIPT_DIR/operator$ID.yaml
-sed -i '' "s|eth_rpc_url: <ETH_RPC_URL>|eth_rpc_url: $RPC_URL|" $SCRIPT_DIR/operator$ID.yaml
+# Detect OS for sed compatibility
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' "s/address: <OPERATOR_ADDRESS>/address: $OPERATOR_ADDRESS/" $SCRIPT_DIR/operator$ID.yaml
+    sed -i '' "s|private_key_store_path: <PATH_TO_KEY>|private_key_store_path: $HOME/.eigenlayer/operator_keys/opr$ID.ecdsa.key.json|" $SCRIPT_DIR/operator$ID.yaml
+    sed -i '' "s|eth_rpc_url: <ETH_RPC_URL>|eth_rpc_url: $RPC_URL|" $SCRIPT_DIR/operator$ID.yaml
+else
+    # Linux and others
+    sed -i "s/address: <OPERATOR_ADDRESS>/address: $OPERATOR_ADDRESS/" $SCRIPT_DIR/operator$ID.yaml
+    sed -i "s|private_key_store_path: <PATH_TO_KEY>|private_key_store_path: $HOME/.eigenlayer/operator_keys/opr$ID.ecdsa.key.json|" $SCRIPT_DIR/operator$ID.yaml
+    sed -i "s|eth_rpc_url: <ETH_RPC_URL>|eth_rpc_url: $RPC_URL|" $SCRIPT_DIR/operator$ID.yaml
+fi
 
 # Send funds to the operator
 cast send $OPERATOR_ADDRESS --value 0.2ether --private-key $FUNDS_PK --rpc-url $RPC_URL 
