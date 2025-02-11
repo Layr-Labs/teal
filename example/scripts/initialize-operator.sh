@@ -153,6 +153,13 @@ if ! command -v go &> /dev/null; then
     fi
 fi
 
+# macOS typically uses zsh by default
+if [ -f "$HOME/.zshrc" ]; then
+    source "$HOME/.zshrc"
+elif [ -f "$HOME/.bashrc" ]; then
+    source "$HOME/.bashrc"
+fi
+
 ## Create a new ecdsa key
 echo "" | $HOME/bin/eigenlayer keys create --key-type=ecdsa --insecure opr$ID > opr$ID.ecdsa.key.json
 ECDSA_PRIVATE_KEY=$(grep -o "//[[:space:]]*[0-9a-f]\{64\}[[:space:]]*//" opr$ID.ecdsa.key.json | tr -d '//' | tr -d ' ')
