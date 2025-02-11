@@ -1,14 +1,17 @@
 {
-  "apkRegistry": "0x2233b18fb577f4767797571831D4693a67386B76",
-  "avsPauserReg": "0x0bB05Fd1687B1E56AEcdD37A27b8974564b22a36",
-  "avsProxyAdmin": "0xD8906Ed56832C5B7e61512Ed0e8c6794d8701f29",
-  "certificateVerifier": "0x623F9C932A188a6A006342013e947dd18f844397",
-  "deploymentBlock": 3299059,
-  "indexRegistry": "0x889Ed72836573259cb87DA19a63D65Ed1F0dCd33",
+  "apkRegistry": "0x1942036E934fDad159B247EEE0e53810CC53F2ea",
+  "avsPauserReg": "0xC6E2e14A1E3582316A5Bf1A0a7cCBE73e40f54C4",
+  "avsProxyAdmin": "0x822240a5c18c1E77552F0f71c7C2E68A21805cC8",
+  "certificateVerifier": "0xa48B728924E9b14a98Af4b9c4129663728B8F174",
+  "deploymentBlock": 3326051,
+  "indexRegistry": "0x4fDa92A3bBb01cBBBDcD13828FbD2E807cf82Ac3",
   "object": "deployment",
-  "operatorStateRetriever": "0x2760Ec0E2b723156f7a33cfB54ae3096cfBc2ECF",
-  "serviceManager": "0x7e148Bb691b41279c7ade56Dd84D652e4df3dc30",
-  "slashingRegistryCoordinator": "0xCb0dd2ce1876B61ac9A7A99d3c1D18ac68f85a27",
-  "socketRegistry": "0x9b619837Bd2E2DeCa07A66D488f1CcEB087a573C",
-  "stakeRegistry": "0x94D759bE3cE57Ee1A097EEf2aDD986331eD01450"
+  "operatorStateRetriever": "0xbfbdfF7C2974016a1BE4faF037b0aA34Ea492c97",
+  "serviceManager": "0x2a9c3255A4E982603b0b0a23869FCf21210A4c35",
+  "slashingRegistryCoordinator": "0x7a90D3B0820565d4B026a0B20ef7ff0Cd70f5fca",
+  "socketRegistry": "0xB2f1212d68D2f4D42783dDF536D0067615878a31",
+  "stakeRegistry": "0x52dF6f4Aba3aF50c71321B17fbE2c87355e352b7",
+  "strategies": [
+    "0x7D704507b76571a51d9caE8AdDAbBFd0ba0e63d3"
+  ]
 }
