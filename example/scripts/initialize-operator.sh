@@ -123,6 +123,12 @@ fi
 if ! command -v foundryup &> /dev/null; then
     echo "Foundry is not installed"
     curl -L https://foundry.paradigm.xyz | bash
+    # macOS typically uses zsh by default
+    if [ -f "$HOME/.zshrc" ]; then
+        source "$HOME/.zshrc"
+    elif [ -f "$HOME/.bashrc" ]; then
+        source "$HOME/.bashrc"
+    fi
     foundryup
 fi
 
