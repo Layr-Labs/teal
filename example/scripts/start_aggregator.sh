@@ -45,7 +45,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Build the nodes
 PARENT_DIR=$SCRIPT_DIR/..
 
-go run $PARENT_DIR/aggregator/eth_call.go  \
-  --eth-url $RPC_URL \
-  --avs-deployment-path $PARENT_DIR/contracts/script/output/avs_deploy_output.json \
-  --ecdsa-private-key $PRIVATE_KEY
+go run "$PARENT_DIR"/aggregator/eth_call.go  \
+  --eth-url "$RPC_URL" \
+  --avs-deployment-path "$PARENT_DIR"/contracts/script/output/avs_deploy_output.json \
+  --ecdsa-private-key "$PRIVATE_KEY"

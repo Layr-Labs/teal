@@ -38,7 +38,7 @@ START_SOCKET=8080
 if [ "$NUM_OPERATORS" -gt 0 ]; then
   for i in $(seq 0 $((NUM_OPERATORS-1))); do
     echo "Creating operator $i"
-    $SCRIPT_DIR/initialize-operator.sh --id $i --funds-pk $FUNDS_PK --rpc-url $RPC_URL --socket $START_SOCKET
+    "$SCRIPT_DIR"/initialize-operator.sh --id "$i" --funds-pk "$FUNDS_PK" --rpc-url "$RPC_URL" --socket "$START_SOCKET"
     START_SOCKET=$((START_SOCKET+1))
   done
 else
