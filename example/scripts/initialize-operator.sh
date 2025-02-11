@@ -217,3 +217,14 @@ if $REGISTER_AVS; then
     --bls-private-key $BLS_PRIVATE_KEY \
     --socket "localhost:$SOCKET"
 fi
+
+# Print instructions for updating the shell environment
+echo ""
+echo "================================================================"
+echo "Important: To ensure all changes are available in your current shell,"
+echo "please run one of the following commands based on your shell:"
+echo ""
+echo "For bash users:  source ~/.bashrc"
+echo "For zsh users:   source ~/.zshrc"
+echo "================================================================"
+
