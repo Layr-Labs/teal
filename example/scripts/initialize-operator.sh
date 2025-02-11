@@ -123,11 +123,23 @@ fi
 if ! command -v foundryup &> /dev/null; then
     echo "Foundry is not installed"
     curl -L https://foundry.paradigm.xyz | bash
-    # macOS typically uses zsh by default
-    if [ -f "$HOME/.zshrc" ]; then
-        source "$HOME/.zshrc"
-    elif [ -f "$HOME/.bashrc" ]; then
-        source "$HOME/.bashrc"
+    # Source the appropriate shell config based on current shell
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        if [ -f "$HOME/.zshrc" ]; then
+            source "$HOME/.zshrc"
+        fi
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        if [ -f "$HOME/.bashrc" ]; then
+            source "$HOME/.bashrc"
+        fi
+    else
+        echo "Warning: Unsupported shell detected: $SHELL"
+        # Try to source either file if available as fallback
+        if [ -f "$HOME/.bashrc" ]; then
+            source "$HOME/.bashrc"
+        elif [ -f "$HOME/.zshrc" ]; then
+            source "$HOME/.zshrc"
+        fi
     fi
     foundryup
 fi
@@ -146,7 +158,13 @@ if ! command -v go &> /dev/null; then
         fi
     else
         # Linux
-        curl -L https://go.dev/dl/go1.22.3.linux-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+        if [[ "$(uname -m)" == "aarch64" ]] || [[ "$(uname -m)" == "arm64" ]]; then
+            # ARM64 processor
+            curl -L https://go.dev/dl/go1.22.3.linux-arm64.tar.gz | sudo tar -C /usr/local -xzf -
+        else
+            # AMD64/x86_64 processor
+            curl -L https://go.dev/dl/go1.22.3.linux-amd64.tar.gz | sudo tar -C /usr/local -xzf -
+        fi
     fi
 
     # Add Go to PATH if not already present
@@ -159,11 +177,23 @@ if ! command -v go &> /dev/null; then
     fi
 fi
 
-# macOS typically uses zsh by default
-if [ -f "$HOME/.zshrc" ]; then
-    source "$HOME/.zshrc"
-elif [ -f "$HOME/.bashrc" ]; then
-    source "$HOME/.bashrc"
+# Source the appropriate shell config based on current shell
+if [[ "$SHELL" == *"zsh"* ]]; then
+    if [ -f "$HOME/.zshrc" ]; then
+        source "$HOME/.zshrc"
+    fi
+elif [[ "$SHELL" == *"bash"* ]]; then
+    if [ -f "$HOME/.bashrc" ]; then
+        source "$HOME/.bashrc"
+    fi
+else
+    echo "Warning: Unsupported shell detected: $SHELL"
+    # Try to source either file if available as fallback
+    if [ -f "$HOME/.bashrc" ]; then
+        source "$HOME/.bashrc"
+    elif [ -f "$HOME/.zshrc" ]; then
+        source "$HOME/.zshrc"
+    fi
 fi
 
 ## Create a new ecdsa key
