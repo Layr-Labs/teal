@@ -37,20 +37,19 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Build the nodes
 PARENT_DIR=$SCRIPT_DIR/..
 
-for file in $SCRIPT_DIR/operators/*.json; do
+for file in "$SCRIPT_DIR"/operators/*.json; do
   echo "Starting node from $file"
   if [ -r "$file" ]; then
-    BLS_PRIVATE_KEY=$(jq -r '.bls_private_key' $file)
-    ECDSA_PRIVATE_KEY=$(jq -r '.ecdsa_private_key' $file)
-    SOCKET=$(jq -r '.socket' $file)
-    PORT=$(echo $SOCKET | cut -d ':' -f 2)
+    BLS_PRIVATE_KEY=$(jq -r '.bls_private_key' "$file")
+    ECDSA_PRIVATE_KEY=$(jq -r '.ecdsa_private_key' "$file")
+    SOCKET=$(jq -r '.socket' "$file")
     echo "Registering operator to AVS with BLS private key $BLS_PRIVATE_KEY, ECDSA private key $ECDSA_PRIVATE_KEY, socket $SOCKET"
-    go run $SCRIPT_DIR/register.go \
-      --eth-url $RPC_URL \
-      --eigenlayer-deployment-path $PARENT_DIR/contracts/script/input/testnet.json \
-      --avs-deployment-path $PARENT_DIR/contracts/script/output/avs_deploy_output.json \
-      --ecdsa-private-key $ECDSA_PRIVATE_KEY \
-      --bls-private-key $BLS_PRIVATE_KEY \
+    go run "$SCRIPT_DIR"/register.go \
+      --eth-url "$RPC_URL" \
+      --eigenlayer-deployment-path "$PARENT_DIR"/contracts/script/input/testnet.json \
+      --avs-deployment-path "$PARENT_DIR"/contracts/script/output/avs_deploy_output.json \
+      --ecdsa-private-key "$ECDSA_PRIVATE_KEY" \
+      --bls-private-key "$BLS_PRIVATE_KEY" \
       --socket "$SOCKET"
   else
     echo "File $file is not readable"

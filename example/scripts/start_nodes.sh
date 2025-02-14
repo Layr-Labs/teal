@@ -31,17 +31,17 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Build the nodes
 PARENT_DIR=$SCRIPT_DIR/..
-go build -o $PARENT_DIR/bin/node $PARENT_DIR/node/cmd/main.go
+go build -o "$PARENT_DIR"/bin/node "$PARENT_DIR"/node/cmd/main.go
 
-for file in $SCRIPT_DIR/operators/*.json; do
+for file in "$SCRIPT_DIR"/operators/*.json; do
   echo "Starting node from $file"
   if [ -r "$file" ]; then
-    BLS_PRIVATE_KEY=$(jq -r '.bls_private_key' $file)
-    ECDSA_PRIVATE_KEY=$(jq -r '.ecdsa_private_key' $file)
-    SOCKET=$(jq -r '.socket' $file)
-    PORT=$(echo $SOCKET | cut -d ':' -f 2)
+    BLS_PRIVATE_KEY=$(jq -r '.bls_private_key' "$file")
+    ECDSA_PRIVATE_KEY=$(jq -r '.ecdsa_private_key' "$file")
+    SOCKET=$(jq -r '.socket' "$file")
+    PORT=$(echo "$SOCKET" | cut -d ':' -f 2)
     echo "Starting node with BLS private key $BLS_PRIVATE_KEY, ECDSA private key $ECDSA_PRIVATE_KEY, socket $SOCKET, and port $PORT"
-    $PARENT_DIR/bin/node --bls-private-key $BLS_PRIVATE_KEY --service-port $PORT --eth-url $RPC_URL & PIDS+=($!)
+    "$PARENT_DIR"/bin/node --bls-private-key "$BLS_PRIVATE_KEY" --service-port "$PORT" --eth-url "$RPC_URL" & PIDS+=($!)
   else
     echo "File $file is not readable"
   fi
@@ -60,7 +60,7 @@ check_processes() {
     done
 }
 
-echo "Nodes started with PIDs: ${PIDS[@]}"
+echo "Nodes started with PIDs: ${PIDS[*]}"
 
 # Cleanup function
 cleanup() {
