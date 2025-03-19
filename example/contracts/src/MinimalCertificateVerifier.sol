@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED 
 pragma solidity ^0.8.12;
 
-import {BLSSignatureChecker} from "eigenlayer-middleware/BLSSignatureChecker.sol";
-import {ISlashingRegistryCoordinator} from "eigenlayer-middleware/interfaces/ISlashingRegistryCoordinator.sol";
+import {BLSSignatureChecker} from "eigenlayer-middleware/src/BLSSignatureChecker.sol";
+import {ISlashingRegistryCoordinator} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
 
 contract MinimalCertificateVerifier is BLSSignatureChecker {
 
