@@ -76,22 +76,7 @@ contract DeployAVS is Script, Test {
         uint256 maxOperatorCount,
         IStrategy[] memory strategies
     ) public virtual {
-        // read the json file
-        string memory inputConfig = vm.readFile(inputConfigPath);
-        EigenlayerDeployment memory eigenlayerDeployment = EigenlayerDeployment({
-            allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
-            delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
-            permissionController: stdJson.readAddress(inputConfig, ".permissionController"),
-            rewardsCoordinator: stdJson.readAddress(inputConfig, ".rewardsCoordinator"),
-            avsDirectory: stdJson.readAddress(inputConfig, ".avsDirectory")
-        });
-
-
-        emit log_named_address("allocation manager", eigenlayerDeployment.allocationManager);
-        emit log_named_address("delegation manager", eigenlayerDeployment.delegationManager);
-        emit log_named_address("permission controller", eigenlayerDeployment.permissionController);
-        emit log_named_address("rewards coordinator", eigenlayerDeployment.rewardsCoordinator);
-        emit log_named_address("avs directory", eigenlayerDeployment.avsDirectory);
+        EigenlayerDeployment memory eigenlayerDeployment = parseConfig(inputConfigPath);
 
         // only a lower bound for the deployment block number
         uint256 deploymentBlock = block.number;
@@ -304,5 +289,25 @@ contract DeployAVS is Script, Test {
 
         vm.createDir("./script/output", true);
         vm.writeJson(finalJson, "./script/output/avs_deploy_output.json");     
+    }
+
+    function parseConfig(
+        string memory inputConfigPath
+    ) public virtual returns (EigenlayerDeployment memory eigenlayerDeployment) {
+        // read the json file
+        string memory inputConfig = vm.readFile(inputConfigPath);
+        eigenlayerDeployment = EigenlayerDeployment({
+            allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
+            delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
+            permissionController: stdJson.readAddress(inputConfig, ".permissionController"),
+            rewardsCoordinator: stdJson.readAddress(inputConfig, ".rewardsCoordinator"),
+            avsDirectory: stdJson.readAddress(inputConfig, ".avsDirectory")
+        });
+
+        emit log_named_address("allocation manager", eigenlayerDeployment.allocationManager);
+        emit log_named_address("delegation manager", eigenlayerDeployment.delegationManager);
+        emit log_named_address("permission controller", eigenlayerDeployment.permissionController);
+        emit log_named_address("rewards coordinator", eigenlayerDeployment.rewardsCoordinator);
+        emit log_named_address("avs directory", eigenlayerDeployment.avsDirectory);
     }
 }
