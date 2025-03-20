@@ -237,6 +237,17 @@ contract DeployAVS is Script, Test {
                 IAVSRegistrar(slashingRegistryCoordinator)
             );
 
+            serviceManager.setAppointee(
+                msg.sender,
+                eigenlayerDeployment.allocationManager,
+                IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI.selector
+            );
+
+            IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI(
+                address(serviceManager),
+                "TEST AVS"
+            );
+
              // give slashingregistrycoordindator permission to createTotalDelegatedStakeQuorum
              serviceManager.setAppointee(
                 address(slashingRegistryCoordinator),
