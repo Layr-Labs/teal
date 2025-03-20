@@ -75,7 +75,7 @@ contract DeployAVS is Script, Test {
         string memory inputConfigPath,
         uint256 maxOperatorCount,
         IStrategy[] memory strategies
-    ) external virtual {
+    ) public virtual {
         // read the json file
         string memory inputConfig = vm.readFile(inputConfigPath);
         EigenlayerDeployment memory eigenlayerDeployment = EigenlayerDeployment({
