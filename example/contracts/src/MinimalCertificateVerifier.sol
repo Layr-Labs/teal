@@ -11,12 +11,15 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
     uint256 public constant THRESHOLD = DENOMINATOR / 2;
 
     // STORAGE
-    struct VerificationRecord { 
+    struct VerificationRecord {
+        bytes inputData;
         bytes quorumNumbers;
         uint32 referenceBlockNumber;
         bytes32 signatoryRecordHash;
         QuorumStakeTotals quorumStakeTotals;
     }
+
+    event CertificateVerified(bytes32 indexed responseHash, bytes indexed inputData);
     
     mapping(bytes32 => VerificationRecord) public verificationRecords;
 
@@ -27,6 +30,7 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
     { }
 
     function verifyCertificate(
+        bytes calldata inputData,
         bytes calldata response,
         bytes calldata quorumNumbers,
         uint32 referenceBlockNumber, 
@@ -57,10 +61,13 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
         }
 
         verificationRecords[responseHash] = VerificationRecord(
+            inputData,
             quorumNumbers,
             referenceBlockNumber,
             signatoryRecordHash,
             quorumStakeTotals
         );
+
+        emit CertificateVerified(responseHash, inputData);
     }
 }
