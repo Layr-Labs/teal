@@ -19,7 +19,7 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
         QuorumStakeTotals quorumStakeTotals;
     }
 
-    event CertificateVerified(bytes32 indexed responseHash, bytes indexed inputData);
+    event CertificateVerified(bytes32 indexed responseHash, bytes inputData);
     
     mapping(bytes32 => VerificationRecord) public verificationRecords;
 
