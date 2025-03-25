@@ -14,14 +14,16 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
     struct VerificationRecord {
         bytes inputData;
         bytes quorumNumbers;
+        bytes32 responseHash;
         uint32 referenceBlockNumber;
         bytes32 signatoryRecordHash;
         QuorumStakeTotals quorumStakeTotals;
     }
 
-    event CertificateVerified(bytes32 indexed responseHash, bytes inputData);
+    event CertificateVerified(bytes32 indexed responseHash, bytes inputData, uint256 recordIndex);
     
-    mapping(bytes32 => VerificationRecord) public verificationRecords;
+    VerificationRecord[] public verificationRecords;
+    mapping(bytes32 => bool) public isCertificateVerified;
 
     constructor(
         ISlashingRegistryCoordinator __slashingRegistryCoordinator
@@ -38,7 +40,7 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
     ) external {
         bytes32 responseHash = keccak256(response);
         require(
-            verificationRecords[responseHash].referenceBlockNumber == 0,
+            !isCertificateVerified[responseHash],
             "Certificate already verified"
         );
 
@@ -60,14 +62,20 @@ contract MinimalCertificateVerifier is BLSSignatureChecker {
             );
         }
 
-        verificationRecords[responseHash] = VerificationRecord(
+        emit CertificateVerified(responseHash, inputData, verificationRecords.length);
+
+        verificationRecords.push(VerificationRecord(
             inputData,
             quorumNumbers,
+            responseHash,
             referenceBlockNumber,
             signatoryRecordHash,
             quorumStakeTotals
-        );
+        ));
+        isCertificateVerified[responseHash] = true;
+    }
 
-        emit CertificateVerified(responseHash, inputData);
+    function totalCertificateCount() public view returns (uint256) {
+        return verificationRecords.length;
     }
 }
