@@ -74,6 +74,7 @@ func (s *AggregatorService) GetCertificate(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get operators: %w", err)
 	}
+	s.logger.Info("Number of operators registered", "numOperators", len(operators))
 
 	// Send task to all operators in parallel
 	for operatorId, operator := range operators {
