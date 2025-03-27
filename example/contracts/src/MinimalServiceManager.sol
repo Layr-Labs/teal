@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED 
 pragma solidity ^0.8.12;
 
-import {ServiceManagerBase, IAVSDirectory, IRewardsCoordinator, IServiceManager} from "eigenlayer-middleware/ServiceManagerBase.sol";
-import {ISlashingRegistryCoordinator} from "eigenlayer-middleware/interfaces/ISlashingRegistryCoordinator.sol";
-import {IStakeRegistry} from "eigenlayer-middleware/interfaces/IStakeRegistry.sol";
-import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
-import {IAllocationManager} from "eigenlayer-core/contracts/interfaces/IAllocationManager.sol";
+import {ServiceManagerBase, IAVSDirectory, IRewardsCoordinator, IServiceManager} from "eigenlayer-middleware/src/ServiceManagerBase.sol";
+import {ISlashingRegistryCoordinator} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
+import {IStakeRegistry} from "eigenlayer-middleware/src/interfaces/IStakeRegistry.sol";
+import {IPermissionController} from "eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
+import {IAllocationManager} from "eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
 
 contract MinimalServiceManager is ServiceManagerBase {
     constructor(
