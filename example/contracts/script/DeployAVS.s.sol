@@ -186,7 +186,8 @@ contract DeployAVS is Script, Test {
                 indexRegistry,
                 socketRegistry,
                 IAllocationManager(eigenlayerDeployment.allocationManager),
-                avsPauserReg
+                avsPauserReg,
+                "1.0.0"
             );
 
         {
