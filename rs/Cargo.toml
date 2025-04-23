@@ -1,0 +1,63 @@
+[package]
+name = "teal"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+description = "Rust port of Teal"
+authors = ["Original Go authors and port contributors"]
+license = "MIT"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+# Logging
+log = "0.4"
+env_logger = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Networking and gRPC
+tonic = "0.10"
+prost = "0.12"
+tonic-build = "0.10"
+tonic-reflection = "0.10"
+tower = "0.4"
+http = "0.2"
+tokio-stream = "0.1"
+
+# Ethereum
+ethers = "2.0"
+# Utilities
+thiserror = "1.0"
+anyhow = "1.0"
+futures = "0.3"
+async-trait = "0.1"
+dashmap = "5.5"
+# Time
+chrono = "0.4"
+eigensdk = { version = "0.5.0", features = ["full"] }
+ark-serialize = "0.5.0"
+alloy = { version = "0.12", features = [
+    "sol-types",
+    "contract",
+    "full",
+    "signer-aws",
+    "rlp",
+    "json-rpc",
+] }
+
+
+[build-dependencies]
+tonic-build = "0.10"
+
+[lib]
+name = "teal"
+path = "src/lib.rs"
+
+[[bin]]
+name = "node"
+path = "src/bin/node.rs"

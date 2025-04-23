@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package node.v1;
+
+option go_package = "github.com/layr-labs/teal/api/node/v1";
+
+service NodeService {
+  rpc Certify(CertifyRequest) returns (CertifyResponse) {}
+}
+
+message CertifyRequest {
+  uint32 task_index = 1;
+  bytes data = 2;
+}
+
+message CertifyResponse {
+  bytes signature = 1;
+  bytes data = 2;
+}
