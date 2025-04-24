@@ -3,4 +3,11 @@ src = "src"
 out = "out"
 libs = ["lib"]
 
+remappings = [
+    "eigenlayer-middleware/=lib/eigenlayer-middleware/src/",
+    "eigenlayer-core/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/src/",
+    "openzeppelin-contracts/=lib/eigenlayer-middleware/lib/openzeppelin-contracts/src/",
+    "openzeppelin-contracts-upgradeable/=lib/eigenlayer-middleware/lib/openzeppelin-contracts-upgradeable/src/",
+]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
