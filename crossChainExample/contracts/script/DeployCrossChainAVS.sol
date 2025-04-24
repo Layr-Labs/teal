@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED 
 pragma solidity ^0.8.12;
 
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "eigenlayer-middleware/lib/openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol";
+import {TransparentUpgradeableProxy} from "eigenlayer-middleware/lib/openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "eigenlayer-middleware/lib/openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {PauserRegistry} from "eigenlayer-core/contracts/permissions/PauserRegistry.sol";
 import {EmptyContract} from "eigenlayer-core/test/mocks/EmptyContract.sol";
 import {IDelegationManager} from "eigenlayer-core/contracts/interfaces/IDelegationManager.sol";
@@ -14,20 +14,20 @@ import {IAVSRegistrar} from "eigenlayer-core/contracts/interfaces/IAVSRegistrar.
 import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
 
 
-import {BLSApkRegistry} from "eigenlayer-middleware/BLSApkRegistry.sol";
-import {SlashingRegistryCoordinator} from "eigenlayer-middleware/SlashingRegistryCoordinator.sol";
-import {OperatorStateRetriever} from "eigenlayer-middleware/OperatorStateRetriever.sol";
-import {IRegistryCoordinator} from "eigenlayer-middleware/interfaces/IRegistryCoordinator.sol";
-import {IndexRegistry} from "eigenlayer-middleware/IndexRegistry.sol";
-import {IIndexRegistry} from "eigenlayer-middleware/interfaces/IIndexRegistry.sol";
-import {StakeRegistry, IStrategy} from "eigenlayer-middleware/StakeRegistry.sol";
-import {IStakeRegistry, IStakeRegistryTypes} from "eigenlayer-middleware/interfaces/IStakeRegistry.sol";
-import {IServiceManager} from "eigenlayer-middleware/interfaces/IServiceManager.sol";
-import {IBLSApkRegistry} from "eigenlayer-middleware/interfaces/IBLSApkRegistry.sol";
-import {ServiceManagerBase} from "eigenlayer-middleware/ServiceManagerBase.sol";
-import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/SocketRegistry.sol";
+import {BLSApkRegistry} from "eigenlayer-middleware/src/BLSApkRegistry.sol";
+import {SlashingRegistryCoordinator} from "eigenlayer-middleware/src/SlashingRegistryCoordinator.sol";
+import {OperatorStateRetriever} from "eigenlayer-middleware/src/OperatorStateRetriever.sol";
+import {IRegistryCoordinator} from "eigenlayer-middleware/src/interfaces/IRegistryCoordinator.sol";
+import {IndexRegistry} from "eigenlayer-middleware/src/IndexRegistry.sol";
+import {IIndexRegistry} from "eigenlayer-middleware/src/interfaces/IIndexRegistry.sol";
+import {StakeRegistry, IStrategy} from "eigenlayer-middleware/src/StakeRegistry.sol";
+import {IStakeRegistry, IStakeRegistryTypes} from "eigenlayer-middleware/src/interfaces/IStakeRegistry.sol";
+import {IServiceManager} from "eigenlayer-middleware/src/interfaces/IServiceManager.sol";
+import {IBLSApkRegistry} from "eigenlayer-middleware/src/interfaces/IBLSApkRegistry.sol";
+import {ServiceManagerBase} from "eigenlayer-middleware/src/ServiceManagerBase.sol";
+import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/src/SocketRegistry.sol";
 import {IPauserRegistry} from "eigenlayer-core/contracts/interfaces/IPauserRegistry.sol";
-import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/interfaces/ISlashingRegistryCoordinator.sol";
+import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
 
 import {MinimalServiceManager} from "../src/MinimalServiceManager.sol";
 import {MinimalCertificateVerifier} from "../src/MinimalCertificateVerifier.sol";
@@ -201,7 +201,8 @@ contract DeployAVS is Script, Test {
                 indexRegistry,
                 socketRegistry,
                 IAllocationManager(eigenlayerDeployment.allocationManager),
-                avsPauserReg
+                avsPauserReg,
+                "v1.0.0"
             );
 
         {

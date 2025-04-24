@@ -4,7 +4,7 @@ out = "out"
 libs = ["lib"]
 
 remappings = [
-    "eigenlayer-middleware/=lib/eigenlayer-middleware/src/",
+    "eigenlayer-middleware/=lib/eigenlayer-middleware/",
     "eigenlayer-core/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/src/",
     "openzeppelin-contracts/=lib/eigenlayer-middleware/lib/openzeppelin-contracts/src/",
     "openzeppelin-contracts-upgradeable/=lib/eigenlayer-middleware/lib/openzeppelin-contracts-upgradeable/src/",
