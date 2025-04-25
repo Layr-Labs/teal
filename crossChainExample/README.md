@@ -26,7 +26,7 @@ Only change the strategies if you know what you're doing.
 
 First, let's create an operator and give it some stETH.
 ```
-cd example/scripts
+cd crossChainExample/scripts
 ./init_operators.sh --num-operators 3 --rpc-url $ETH_RPC_URL --funds-pk $PRIVATE_KEY
 ```
 This will mint and deposit 0.1 ether of stETH into EigenLayer on behalf of the operator.

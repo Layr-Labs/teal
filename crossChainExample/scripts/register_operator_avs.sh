@@ -46,7 +46,7 @@ for file in "$SCRIPT_DIR"/operators/*.json; do
     echo "Registering operator to AVS with BLS private key $BLS_PRIVATE_KEY, ECDSA private key $ECDSA_PRIVATE_KEY, socket $SOCKET"
     go run "$SCRIPT_DIR"/register.go \
       --eth-url "$RPC_URL" \
-      --eigenlayer-deployment-path "$PARENT_DIR"/contracts/script/input/testnet.json \
+      --eigenlayer-deployment-path "$PARENT_DIR"/contracts/script/input/preprod.json \
       --avs-deployment-path "$PARENT_DIR"/contracts/script/output/avs_deploy_output.json \
       --ecdsa-private-key "$ECDSA_PRIVATE_KEY" \
       --bls-private-key "$BLS_PRIVATE_KEY" \

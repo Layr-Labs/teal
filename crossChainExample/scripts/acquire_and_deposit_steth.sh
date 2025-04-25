@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ./acquire_and_deposit_steth.sh $ETH_RPC_URL $PRIVATE_KEY  ../contracts/script/input/testnet.json 0.1ether
+# ./acquire_and_deposit_steth.sh $ETH_RPC_URL $PRIVATE_KEY  ../contracts/script/input/preprod.json 0.1ether
 
 ETH_RPC_URL=$1
 PRIVATE_KEY=$2
@@ -10,7 +10,6 @@ STETH_ADDRESS=0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034
 AMOUNT_TO_DEPOSIT=$4
 
 OPERATOR_ADDRESS=$(cast wallet address "$PRIVATE_KEY")
-
 cast send --rpc-url "$ETH_RPC_URL" --private-key "$PRIVATE_KEY" "$STETH_ADDRESS" --value="$AMOUNT_TO_DEPOSIT"
 sleep 5
 
@@ -19,6 +18,9 @@ sleep 5
 set +e
 balance=$(cast call --rpc-url "$ETH_RPC_URL" "$STETH_ADDRESS" "balanceOf(address)(uint256)" "$OPERATOR_ADDRESS")
 echo "StETH Balance: $balance"
+# Extract only the numeric part, removing anything in square brackets
+balance=$(echo $balance | awk '{print $1}')
+echo "Using balance: $balance"
 set -e
 
 strategyManager=$(jq -r '.strategyManager' "$EIGENLAYER_DEPLOYMENT_PATH")

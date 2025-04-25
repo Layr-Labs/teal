@@ -1,0 +1,10 @@
+operator:
+    address: <OPERATOR_ADDRESS>
+    delegation_approver_address: "0x0000000000000000000000000000000000000000"
+    metadata_url: "https://madhur-test-public.s3.us-east-2.amazonaws.com/metadata.json"
+    allocation_delay: 0
+el_delegation_manager_address: 0x75dfE5B44C2E530568001400D3f704bC8AE350CC
+eth_rpc_url: <ETH_RPC_URL>
+chain_id: 17000
+private_key_store_path: <PATH_TO_KEY>
+signer_type: local_keystore
