@@ -30,7 +30,6 @@ import {IPauserRegistry} from "eigenlayer-core/contracts/interfaces/IPauserRegis
 import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
 
 import {MinimalServiceManager} from "../src/MinimalServiceManager.sol";
-import {MinimalCertificateVerifier} from "../src/MinimalCertificateVerifier.sol";
 
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
@@ -47,7 +46,6 @@ contract DeployAVS is Script, Test {
     // Middleware contracts
     BLSApkRegistry public apkRegistry;
     IServiceManager public serviceManager;
-    MinimalCertificateVerifier public certificateVerifier;
     SlashingRegistryCoordinator public slashingRegistryCoordinator;
     IIndexRegistry public indexRegistry;
     IStakeRegistry public stakeRegistry;
@@ -57,7 +55,6 @@ contract DeployAVS is Script, Test {
     // Implementation contracts
     BLSApkRegistry public apkRegistryImplementation;
     IServiceManager public serviceManagerImplementation;
-    MinimalCertificateVerifier public certificateVerifierImplementation;
     ISlashingRegistryCoordinator public slashingRegistryCoordinatorImplementation;
     IIndexRegistry public indexRegistryImplementation;
     IStakeRegistry public stakeRegistryImplementation;
@@ -110,10 +107,6 @@ contract DeployAVS is Script, Test {
         
         // Deploy upgradeable proxy contracts pointing to empty contract initially
         serviceManager = ServiceManagerBase(
-            address(new TransparentUpgradeableProxy(address(emptyContract), address(avsProxyAdmin), ""))
-        );
-
-        certificateVerifier = MinimalCertificateVerifier(
             address(new TransparentUpgradeableProxy(address(emptyContract), address(avsProxyAdmin), ""))
         );
 
@@ -241,6 +234,15 @@ contract DeployAVS is Script, Test {
                 )
             );
 
+            // Set metadata URI
+            serviceManager.setAppointee(
+                msg.sender,
+                address(eigenlayerDeployment.allocationManager),
+                IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI.selector
+            );
+
+            IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI(address(serviceManager), "TEST AVS");
+
             // set AVS Registrar on AllocationManager to SlashingRegistryCoordinator
             serviceManager.setAppointee(
                 msg.sender,
@@ -270,22 +272,12 @@ contract DeployAVS is Script, Test {
             }   
         }
 
-        certificateVerifierImplementation = new MinimalCertificateVerifier(
-            slashingRegistryCoordinator
-        );
-
-        avsProxyAdmin.upgrade(
-            ITransparentUpgradeableProxy(payable(address(certificateVerifier))),
-            address(certificateVerifierImplementation)
-        );
-
         operatorStateRetriever = new OperatorStateRetriever();
 
         vm.stopBroadcast();
 
         string memory output = "deployment";
         vm.serializeAddress(output, "serviceManager", address(serviceManager));
-        vm.serializeAddress(output, "certificateVerifier", address(certificateVerifier));
         vm.serializeAddress(output, "slashingRegistryCoordinator", address(slashingRegistryCoordinator));
         vm.serializeAddress(output, "indexRegistry", address(indexRegistry));
         vm.serializeAddress(output, "stakeRegistry", address(stakeRegistry));
