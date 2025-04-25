@@ -110,6 +110,7 @@ async fn register_operator(
         .unwrap();
 
     let tx = wait_transaction(&http_url, tx_hash).await.unwrap();
+    println!("register_operator_tx{:?}",tx.status());
     assert!(tx.status(), "Transaction failed {:?}", tx);
 
     Ok(())
