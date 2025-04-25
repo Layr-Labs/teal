@@ -46,21 +46,19 @@ Now, let's register the operator with EigenLayer and the AVS.
 
 This will register your operator with the AVS and EigenLayer. 
 
-# Step 3: Calculate the operator table and push to the certificate verifier
+# Step 3: Calculate the operator table and transport to the certificate verifier
 
 
 
-# Step 4: Run the Operator and Aggregator
+# Step 4: Run the Operators
 
 Run the operator first.
 ```
 ./start_nodes.sh --rpc-url $ETH_RPC_URL
 ```
 
+# Step 5: Run teh aggregator and begin verifying certificates 
 In a seperate terminal, run the aggregator.
 ```
 ./start_aggregator.sh --rpc-url $HOLESKY_WSS_URL --private-key $PRIVATE_KEY
 ```
-
-# Step 5: Verify certificate on the certificate verifier
-
