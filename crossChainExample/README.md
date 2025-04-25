@@ -6,6 +6,7 @@ This example will take you end to end through deploying a minimal AVS that uses 
 
 ```
 export ETH_RPC_URL=<HOLSKY_RPC_URL>
+export DESTINATION_RPC_URL=<DESTINATION_RPC_URL>
 export PRIVATE_KEY=<PRIVATE_KEY_WITH_SOME_ETH_IN_IT>
 export ETHERSCAN_API_KEY=<ETHERSCAN_API_KEY>
 ```
@@ -21,6 +22,11 @@ forge script script/DeployAVS.s.sol --broadcast  --sig "run(string,uint256,addre
 See that `example/contracts/script/output/avs_deploy_output.json` has been created.
 
 Only change the strategies if you know what you're doing.
+
+Next, deploy the Certificate Verifier on the destination chain
+
+```
+forge script 
 
 # Step 2: Setup Operators
 
@@ -39,7 +45,11 @@ Now, let's register the operator with EigenLayer and the AVS.
 
 This will register your operator with the AVS and EigenLayer. 
 
-# Step 3: Run the Operator and Aggregator
+# Step 3: Calculate the operator table and push to the certificate verifier
+
+
+
+# Step 4: Run the Operator and Aggregator
 
 Run the operator first.
 ```
@@ -50,3 +60,6 @@ In a seperate terminal, run the aggregator.
 ```
 ./start_aggregator.sh --rpc-url $HOLESKY_WSS_URL --private-key $PRIVATE_KEY
 ```
+
+# Step 5: Verify certificate on the certificate verifier
+
