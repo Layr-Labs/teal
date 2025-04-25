@@ -17,7 +17,7 @@ For demo purposes, we'll deploy an AVS to EigenLayer's **Holesky Preprod** with 
 
 ```
 cd crossChainExample/contracts
-forge script script/DeployAVS.s.sol --broadcast  --sig "run(string,uint256,address[])" -- ./script/input/testnet.json 200 "[0x7d704507b76571a51d9cae8addabbfd0ba0e63d3]" --verify --etherscan-api-key $ETHERSCAN_API_KEY
+forge script --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCrossChainAVS.s.sol --sig "run(string,uint256,address[])" -- ./script/input/testnet.json 200 "[0x7d704507b76571a51d9cae8addabbfd0ba0e63d3]"
 ```
 See that `example/contracts/script/output/avs_deploy_output.json` has been created.
 
@@ -26,7 +26,8 @@ Only change the strategies if you know what you're doing.
 Next, deploy the Certificate Verifier on the destination chain
 
 ```
-forge script 
+forge script --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --rpc-url $DESTINATION_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCertificateVerifier.sol --sig "run(string,uint32,uint32[])" -- ./script/output/avs_deploy_output.json 0 86400
+```
 
 # Step 2: Setup Operators
 
