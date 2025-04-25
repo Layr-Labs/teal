@@ -13,6 +13,3 @@
 [submodule "crossChainExample/contracts/lib/forge-std"]
 	path = crossChainExample/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "crossChainExample/contracts/lib/eigenlayer-middleware"]
-	path = crossChainExample/contracts/lib/eigenlayer-middleware
-	url = https://github.com/Layr-Labs/eigenlayer-middleware
