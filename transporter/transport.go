@@ -1,4 +1,4 @@
-package main
+package distribution
 
 import (
 	"context"
@@ -57,7 +57,7 @@ var (
 	}
 )
 
-// Convert between the two different binding types
+// TODO: make common package??
 func convertOperatorSetInfo(from tableCalculator.IBLSTableCalculatorTypesBN254OperatorSetInfo) certificateVerifier.IBLSTableCalculatorTypesBN254OperatorSetInfo {
 	// Create a new G1Point with the same values
 	g1Point := certificateVerifier.BN254G1Point{
@@ -77,6 +77,35 @@ func convertOperatorSetInfo(from tableCalculator.IBLSTableCalculatorTypesBN254Op
 		AggregatePubkey: g1Point,
 		TotalWeights:    totalWeights,
 	}
+}
+
+// Get operator infos and calculate merkle root
+// For now, just returns an empty root
+func getOperatorInfosAndCalculateMerkleRoot(
+	ctx context.Context,
+	logger *logging.SLogger,
+	tableCalc *tableCalculator.BLSTableCalculator,
+	operatorSet tableCalculator.OperatorSet,
+	blockNumber *big.Int,
+) ([32]byte, error) {
+	logger.Info("Getting operator infos for merkle tree", "operatorSetID", operatorSet.Id, "blockNumber", blockNumber)
+
+	// Get operator infos
+	operatorInfos, err := tableCalc.GetOperatorInfos(&bind.CallOpts{
+		BlockNumber: blockNumber,
+	}, operatorSet)
+
+	if err != nil {
+		logger.Error("Failed to get operator infos", "error", err)
+		return [32]byte{}, err
+	}
+
+	logger.Info("Retrieved operator infos", "count", len(operatorInfos))
+
+	// TODO: Merkleize operator infos
+
+	// For now, return empty root
+	return [32]byte{}, nil
 }
 
 func main() {
@@ -221,7 +250,6 @@ func updateOperatorTable(
 	operatorSetInfo, err := tableCalc.CalculateOperatorTable(&bind.CallOpts{
 		BlockNumber: header.Number,
 	}, operatorSet)
-
 	if err != nil {
 		logger.Error("Failed to calculate operator table", "error", err)
 		return err
@@ -230,15 +258,19 @@ func updateOperatorTable(
 	// Log number of operators and list of operator addresses
 	logger.Info("Operator table calculated", "numOperators", operatorSetInfo.NumOperators)
 
+	// Get operator infos and calculate merkle root using the same block number
+	operatorInfosMerkleRoot, err := getOperatorInfosAndCalculateMerkleRoot(ctx, logger, tableCalc, operatorSet, header.Number)
+	if err != nil {
+		logger.Error("Failed to calculate operator infos merkle root", "error", err)
+		return err
+	}
+
 	// Prepare transaction to update operator table
 	txOpts, err := txManager.GetNoSendTxOpts()
 	if err != nil {
 		logger.Error("Failed to get tx opts", "error", err)
 		return err
 	}
-
-	// For now, we ignore the operatorInfoTreeRoot calculation
-	emptyRoot := [32]byte{}
 
 	// Convert the operatorSetInfo to the correct type
 	convertedInfo := convertOperatorSetInfo(operatorSetInfo)
@@ -250,7 +282,7 @@ func updateOperatorTable(
 		txOpts,
 		uint32(blockTimestamp.Unix()),
 		convertedInfo,
-		emptyRoot,
+		operatorInfosMerkleRoot, // Use the calculated merkle root instead of empty root
 	)
 	if err != nil {
 		logger.Error("Failed to update operator table", "error", err)
