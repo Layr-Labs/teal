@@ -28,7 +28,7 @@ contract DeployCertificateVerifier is Script, Test {
 
     function run(
         string memory avsConfigPath,
-        uint256 operatorSetId,
+        uint32 operatorSetId,
         uint32 maxTableStaleness
     ) public {
         // read the json file
@@ -42,37 +42,37 @@ contract DeployCertificateVerifier is Script, Test {
 
         OperatorSet memory operatorSet = OperatorSet({
             avs: avsDeployment.serviceManager,
-            operatorSetId: operatorSetId
+            id: operatorSetId
         });
 
         // Deploy ProxyAdmin
-        l2ProxyAdmin = new ProxyAdmin();
+        proxyAdmin = new ProxyAdmin();
 
         emptyContract = new EmptyContract();
 
         // Deploy proxy
-        certificateVerifier = new BLSCertificateVerifier(
-            address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
-        );
+        // certificateVerifier = new BLSCertificateVerifier(
+        //     address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
+        // );
 
-        // Deploy implementation
-        certificateVerifierImplementation = new BLSCertificateVerifier(
-            address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
-        );
+        // // Deploy implementation
+        // certificateVerifierImplementation = new BLSCertificateVerifier(
+        //     address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
+        // );
 
         // TODO: make this upgradeable
         // Upgrade Proxy
-        proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(payable(address(certificateVerifier))),
-            address(certificateVerifierImplementation),
-            abi.encodeWithSelector(
-                BLSCertificateVerifier.initialize.selector,
-                operatorSet,
-                msg.sender,
-                maxTableStaleness,
-                msg.sender
-            )
-        );
+        // proxyAdmin.upgradeAndCall(
+        //     ITransparentUpgradeableProxy(payable(address(certificateVerifier))),
+        //     address(certificateVerifierImplementation),
+        //     abi.encodeWithSelector(
+        //         BLSCertificateVerifier.initialize.selector,
+        //         operatorSet,
+        //         msg.sender,
+        //         maxTableStaleness,
+        //         msg.sender
+        //     )
+        // );
 
         vm.stopBroadcast();
 
