@@ -19,11 +19,13 @@ pub trait OperatorRequester: Send + Sync {
 }
 
 #[derive(Debug, Clone)]
-pub struct GrpcOperatorRequester {}
+pub struct GrpcOperatorRequester {
+    operator_url: String,
+}
 
 impl GrpcOperatorRequester {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(operator_url: String) -> Self {
+        Self { operator_url }
     }
 }
 
@@ -31,24 +33,28 @@ impl GrpcOperatorRequester {
 impl OperatorRequester for GrpcOperatorRequester {
     async fn request_certification(
         &self,
-        operator: OperatorAvsState,
+        // TODO pull the url from the OperatorInfo once we have it
+        _operator: OperatorAvsState,
         operator_address: Address,
         task_index: TaskIndex,
         data: &[u8],
     ) -> Result<CertifyResponse> {
-        let url = operator_address.to_string();
-        let mut client = NodeServiceClient::connect(url)
+        tracing::info!(operator_address = ?operator_address, "Connecting to operator");
+        let mut client = NodeServiceClient::connect(self.operator_url.clone())
             .await
             .map_err(|e| anyhow!("Failed to connect to operator: {}", e))?;
         let pb_req = CertifyRequest {
             task_index: task_index.into(),
             data: data.to_vec(),
         };
+
+        tracing::info!(pb_req = ?pb_req, "Sending request to operator");
         let resp = client
             .certify(Request::new(pb_req))
             .await
             .map_err(|e| anyhow!("gRPC error: {}", e))?
             .into_inner();
+        tracing::info!(resp = ?resp, "Received response from operator");
         Ok(CertifyResponse {
             signature: resp.signature.to_vec(),
             data: resp.data.to_vec(),

@@ -176,7 +176,10 @@ async fn start_anvil_with_state(
 }
 
 #[derive(Clone)]
-struct LocalOperatorInfoService {}
+struct LocalOperatorInfoService {
+    operator_socket: String,
+    pub_keys: OperatorPubKeys,
+}
 
 #[async_trait]
 impl OperatorInfoService for LocalOperatorInfoService {
@@ -190,13 +193,13 @@ impl OperatorInfoService for LocalOperatorInfoService {
         &self,
         operator_address: Address,
     ) -> std::result::Result<Option<OperatorPubKeys>, OperatorInfoServiceError> {
-        unimplemented!();
+        Ok(Some(self.pub_keys.clone()))
     }
 }
 
 #[tokio::test]
 async fn integration_bls_agg() -> Result<()> {
-    init_logger(LogLevel::Trace);
+    init_logger(LogLevel::Debug);
     // Start an Anvil instance
     let (anvil, anvil_http_endpoint, anvil_ws_endpoint) =
         start_anvil_with_state("tests/contracts-deployed-anvil-state.json").await;
@@ -233,21 +236,19 @@ async fn integration_bls_agg() -> Result<()> {
     )
     .await?;
 
+    let operator_socket = "localhost:8080".to_string();
     let bls_key_pair = BlsKeyPair::new(
         "1371012690269088913462269866874713266643928125698382731338806296762673180359922"
             .to_string(),
     )?;
-
-    let operator_socket = "localhost:8080".to_string();
     let eth_client = Provider::<Http>::try_from(anvil_http_endpoint.clone())?;
-    let current_block_number = eth_client.get_block_number().await?;
 
     register_operator(
         &avs_registry_chain_writer,
         &el_chain_reader,
         contract_addrs.service_manager,
         operator_address,
-        operator_socket,
+        operator_socket.clone(),
         bls_key_pair.clone(),
         vec![0].into(),
         anvil_http_endpoint,
@@ -256,7 +257,10 @@ async fn integration_bls_agg() -> Result<()> {
 
     let avs_registry_service = AvsRegistryServiceChainCaller::new(
         avs_registry_chain_reader.clone(),
-        LocalOperatorInfoService {},
+        LocalOperatorInfoService {
+            operator_socket: operator_socket.clone(),
+            pub_keys: bls_key_pair.clone().into(),
+        },
     );
 
     // Start the node server to respond to certification requests
@@ -270,10 +274,13 @@ async fn integration_bls_agg() -> Result<()> {
     );
 
     spawn(async move {
-        even_loving_node.start().await.unwrap();
+        even_loving_node
+            .start()
+            .await
+            .expect("Failed to start even loving node");
     });
 
-    let operator_requester = GrpcOperatorRequester::new();
+    let operator_requester = GrpcOperatorRequester::new(operator_socket.clone());
 
     let aggregator = AggregatorService::new(
         avs_registry_chain_reader.clone(),
@@ -281,6 +288,7 @@ async fn integration_bls_agg() -> Result<()> {
         operator_requester.clone(),
     );
 
+    let current_block_number = eth_client.get_block_number().await?;
     let task_index = 0;
     let quorum_number = 0;
     let quorum_threshold_percentage = 100;

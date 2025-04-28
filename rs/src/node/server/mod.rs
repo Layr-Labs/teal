@@ -36,11 +36,10 @@ impl<C: Certifier + 'static> BaseNode<C> {
 
     pub async fn start(&self) -> Result<()> {
         let addr = SocketAddr::from(([0, 0, 0, 0], self.config.service_port));
-        let listener = TcpListener::bind(&addr).await?;
-        self.start_with_listener(listener).await
+        self.start_with_listener(addr).await
     }
 
-    pub async fn start_with_listener(&self, listener: TcpListener) -> Result<()> {
+    pub async fn start_with_listener(&self, addr: SocketAddr) -> Result<()> {
         let certifier = self.certifier.clone();
         let config = self.config.clone();
 
@@ -56,8 +55,7 @@ impl<C: Certifier + 'static> BaseNode<C> {
         let router = tower::ServiceBuilder::new().service(service);
 
         tracing::info!(port = self.config.service_port, "Starting server");
-
-        let addr = listener.local_addr()?;
+        tracing::info!(addr = addr.to_string(), "Server listening on");
 
         // Use a simpler approach for the server
         tonic::transport::Server::builder()

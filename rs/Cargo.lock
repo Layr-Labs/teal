@@ -7120,6 +7120,7 @@ dependencies = [
  "prost",
  "serde",
  "serde_json",
+ "sha2",
  "testcontainers",
  "thiserror 1.0.69",
  "tokio",

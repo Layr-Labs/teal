@@ -1,5 +1,6 @@
 pub mod operator_requester;
 
+use alloy::primitives::B256;
 use anyhow::{anyhow, Result};
 use ark_serialize::CanonicalDeserialize;
 use ark_serialize::{Compress, Validate};
@@ -13,7 +14,10 @@ use eigensdk::services_blsaggregation::bls_agg::{
 use eigensdk::services_blsaggregation::bls_aggregation_service_response::BlsAggregationServiceResponse;
 use eigensdk::types::avs::{TaskIndex, TaskResponseDigest};
 use eigensdk::types::operator::{QuorumNum, QuorumThresholdPercentage};
+use futures::task;
 use operator_requester::OperatorRequester;
+use sha2::Sha256;
+use sha2::Digest;
 use std::io::Cursor;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -110,19 +114,20 @@ impl<T: AvsRegistryService + Send + Sync + Clone + 'static, R: OperatorRequester
                     Err(_) => return Ok::<(), anyhow::Error>(()),
                 };
 
+                tracing::info!(operator_id = ?operator_id, "Received signature from operator");
+
                 let cursor = Cursor::new(&resp.signature);
                 let signature: BlsSignature =
                     BlsSignature::deserialize_with_mode(cursor, Compress::Yes, Validate::Yes)
                         .map_err(|e| anyhow!("Failed to deserialize signature: {}", e))?;
                 let signature = Signature::new(signature);
 
-                tracing::info!(operator_id = ?operator_id, "Received signature from operator");
+                let task_data = resp.data;
+                let mut hasher = Sha256::new();
+                hasher.update(&task_data);
+                let task_response_digest = B256::from_slice(hasher.finalize().as_ref());
 
-                let raw: [u8; 32] = resp
-                    .data
-                    .try_into()
-                    .expect("resp.data must be exactly 32 bytes");
-                let task_response_digest = TaskResponseDigest::new(raw);
+                tracing::info!(operator_id = ?operator_id, "Processing signature from operator");
 
                 return match service_handle
                     .process_signature(TaskSignature::new(
