@@ -1,4 +1,4 @@
-package distribution
+package main
 
 import (
 	"context"
@@ -22,6 +22,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/urfave/cli/v2"
+	"github.com/wealdtech/go-merkletree/v2"
+	"github.com/wealdtech/go-merkletree/v2/keccak256"
 )
 
 var (
@@ -79,8 +81,86 @@ func convertOperatorSetInfo(from tableCalculator.IBLSTableCalculatorTypesBN254Op
 	}
 }
 
-// Get operator infos and calculate merkle root
-// For now, just returns an empty root
+// Calculates operator table from the table calculator
+func calculateOperatorTable(
+	ctx context.Context,
+	logger *logging.SLogger,
+	tableCalc *tableCalculator.BLSTableCalculator,
+	operatorSet tableCalculator.OperatorSet,
+	blockNumber *big.Int,
+) (tableCalculator.IBLSTableCalculatorTypesBN254OperatorSetInfo, error) {
+	logger.Info("Calculating operator table", "operatorSetID", operatorSet.Id, "blockNumber", blockNumber)
+
+	operatorSetInfo, err := tableCalc.CalculateOperatorTable(&bind.CallOpts{
+		BlockNumber: blockNumber,
+	}, operatorSet)
+
+	if err != nil {
+		logger.Error("Failed to calculate operator table", "error", err)
+		return operatorSetInfo, err
+	}
+
+	logger.Info("Operator table calculated", "numOperators", operatorSetInfo.NumOperators)
+	return operatorSetInfo, nil
+}
+
+// Gets operator infos from the table calculator
+func getOperatorInfos(
+	ctx context.Context,
+	logger *logging.SLogger,
+	tableCalc *tableCalculator.BLSTableCalculator,
+	operatorSet tableCalculator.OperatorSet,
+	blockNumber *big.Int,
+) ([]tableCalculator.IBLSTableCalculatorTypesBN254OperatorInfo, error) {
+	logger.Info("Getting operator infos", "operatorSetID", operatorSet.Id, "blockNumber", blockNumber)
+
+	operatorInfos, err := tableCalc.GetOperatorInfos(&bind.CallOpts{
+		BlockNumber: blockNumber,
+	}, operatorSet)
+
+	if err != nil {
+		logger.Error("Failed to get operator infos", "error", err)
+		return nil, err
+	}
+
+	logger.Info("Retrieved operator infos", "count", len(operatorInfos))
+	return operatorInfos, nil
+}
+
+// Calculates merkle root from operator infos
+func calculateMerkleRoot(
+	logger *logging.SLogger,
+	operatorInfos []tableCalculator.IBLSTableCalculatorTypesBN254OperatorInfo,
+) ([32]byte, error) {
+	// Generate leaf nodes
+	operatorInfoLeaves := make([][]byte, 0)
+
+	for _, operatorInfo := range operatorInfos {
+		operatorInfoLeaves = append(
+			operatorInfoLeaves,
+			EncodeOperatorInfoLeaf(operatorInfo),
+		)
+	}
+
+	operatorInfoTree, err := merkletree.NewTree(
+		merkletree.WithData(operatorInfoLeaves),
+		merkletree.WithHashType(keccak256.New()),
+	)
+	if err != nil {
+		logger.Error("Failed to create merkle tree", "error", err)
+		return [32]byte{}, err
+	}
+
+	// Get the root and convert to [32]byte
+	rootBytes := operatorInfoTree.Root()
+	var rootHash [32]byte
+	copy(rootHash[:], rootBytes)
+
+	logger.Info("Calculated merkle root", "root", gethcommon.Bytes2Hex(rootHash[:]))
+	return rootHash, nil
+}
+
+// Wrapper function that combines getting operator infos and calculating merkle root
 func getOperatorInfosAndCalculateMerkleRoot(
 	ctx context.Context,
 	logger *logging.SLogger,
@@ -88,24 +168,12 @@ func getOperatorInfosAndCalculateMerkleRoot(
 	operatorSet tableCalculator.OperatorSet,
 	blockNumber *big.Int,
 ) ([32]byte, error) {
-	logger.Info("Getting operator infos for merkle tree", "operatorSetID", operatorSet.Id, "blockNumber", blockNumber)
-
-	// Get operator infos
-	operatorInfos, err := tableCalc.GetOperatorInfos(&bind.CallOpts{
-		BlockNumber: blockNumber,
-	}, operatorSet)
-
+	operatorInfos, err := getOperatorInfos(ctx, logger, tableCalc, operatorSet, blockNumber)
 	if err != nil {
-		logger.Error("Failed to get operator infos", "error", err)
 		return [32]byte{}, err
 	}
 
-	logger.Info("Retrieved operator infos", "count", len(operatorInfos))
-
-	// TODO: Merkleize operator infos
-
-	// For now, return empty root
-	return [32]byte{}, nil
+	return calculateMerkleRoot(logger, operatorInfos)
 }
 
 func main() {
@@ -131,6 +199,7 @@ func main() {
 	}
 }
 
+// TODO: turn this into a process that can be run in the background at a given interval
 func start(c *cli.Context) error {
 	ctx := context.Background()
 
@@ -240,26 +309,28 @@ func updateOperatorTable(
 		return err
 	}
 
-	currentBlockNumber := header.Number.Uint64()
+	currentBlockNumber := header.Number
 	blockTimestamp := time.Unix(int64(header.Time), 0)
 
 	logger.Info("Querying operator table",
 		"blockNumber", currentBlockNumber,
 		"blockTimestamp", blockTimestamp)
 
-	operatorSetInfo, err := tableCalc.CalculateOperatorTable(&bind.CallOpts{
-		BlockNumber: header.Number,
-	}, operatorSet)
+	// Calculate operator table
+	operatorSetInfo, err := calculateOperatorTable(ctx, logger, tableCalc, operatorSet, currentBlockNumber)
 	if err != nil {
-		logger.Error("Failed to calculate operator table", "error", err)
 		return err
 	}
 
-	// Log number of operators and list of operator addresses
-	logger.Info("Operator table calculated", "numOperators", operatorSetInfo.NumOperators)
+	// Get operator infos
+	operatorInfos, err := getOperatorInfos(ctx, logger, tableCalc, operatorSet, currentBlockNumber)
+	if err != nil {
+		logger.Error("Failed to get operator infos", "error", err)
+		return err
+	}
 
-	// Get operator infos and calculate merkle root using the same block number
-	operatorInfosMerkleRoot, err := getOperatorInfosAndCalculateMerkleRoot(ctx, logger, tableCalc, operatorSet, header.Number)
+	// Calculate merkle root
+	operatorInfosMerkleRoot, err := calculateMerkleRoot(logger, operatorInfos)
 	if err != nil {
 		logger.Error("Failed to calculate operator infos merkle root", "error", err)
 		return err
@@ -277,12 +348,14 @@ func updateOperatorTable(
 
 	// Call updateOperatorTable
 	// TODO: Should also be adding the blockNumber
-	logger.Info("Updating operator table on verifier", "timestamp", blockTimestamp)
+	logger.Info("Updating operator table on verifier",
+		"timestamp", blockTimestamp,
+		"merkleRoot", gethcommon.Bytes2Hex(operatorInfosMerkleRoot[:]))
 	tx, err := certVerifier.UpdateOperatorTable(
 		txOpts,
 		uint32(blockTimestamp.Unix()),
 		convertedInfo,
-		operatorInfosMerkleRoot, // Use the calculated merkle root instead of empty root
+		operatorInfosMerkleRoot,
 	)
 	if err != nil {
 		logger.Error("Failed to update operator table", "error", err)
@@ -298,4 +371,33 @@ func updateOperatorTable(
 
 	logger.Info("Successfully updated operator table", "txHash", receipt.TxHash.Hex())
 	return nil
+}
+
+// encodes an operator info as a leaf node. Assumes downstream verification contract uses packed encoding
+// todo: add salt
+// Format: G1Point.X || G1Point.Y || weights[0] || weights[1] || ... weights[len(weights) - 1]
+func EncodeOperatorInfoLeaf(operatorInfo tableCalculator.IBLSTableCalculatorTypesBN254OperatorInfo) []byte {
+	// Encode G1Point.X (32 bytes)
+	xBytes := make([]byte, 32)
+	operatorInfo.Pubkey.X.FillBytes(xBytes)
+
+	// Encode G1Point.Y (32 bytes)
+	yBytes := make([]byte, 32)
+	operatorInfo.Pubkey.Y.FillBytes(yBytes)
+
+	// Concat
+	result := append(xBytes, yBytes...)
+
+	// Encode each weight
+	// TODO: add salt
+	for _, weight := range operatorInfo.Weights {
+		// Convert weight to fixed 32-byte representation
+		weightBytes := make([]byte, 32)
+		weight.FillBytes(weightBytes)
+
+		// Append
+		result = append(result, weightBytes[:]...)
+	}
+
+	return result
 }
