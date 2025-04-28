@@ -373,30 +373,22 @@ func updateOperatorTable(
 	return nil
 }
 
-// encodes an operator info as a leaf node. Assumes downstream verification contract uses packed encoding
-// todo: add salt
-// Format: G1Point.X || G1Point.Y || weights[0] || weights[1] || ... weights[len(weights) - 1]
+// encodes an operator info as a leaf node using Solidity's abi.encodePacked
+// Format matches abi.encodePacked(G1Point.X, G1Point.Y, weights)
 func EncodeOperatorInfoLeaf(operatorInfo tableCalculator.IBLSTableCalculatorTypesBN254OperatorInfo) []byte {
-	// Encode G1Point.X (32 bytes)
-	xBytes := make([]byte, 32)
-	operatorInfo.Pubkey.X.FillBytes(xBytes)
+	// Get minimal byte representation of X and Y coordinates
+	xBytes := operatorInfo.Pubkey.X.Bytes()
+	yBytes := operatorInfo.Pubkey.Y.Bytes()
 
-	// Encode G1Point.Y (32 bytes)
-	yBytes := make([]byte, 32)
-	operatorInfo.Pubkey.Y.FillBytes(yBytes)
+	result := make([]byte, 0, len(xBytes)+len(yBytes))
+	result = append(result, xBytes...)
+	result = append(result, yBytes...)
 
-	// Concat
-	result := append(xBytes, yBytes...)
-
-	// Encode each weight
-	// TODO: add salt
+	// Encode each weight with minimal bytes
 	for _, weight := range operatorInfo.Weights {
-		// Convert weight to fixed 32-byte representation
-		weightBytes := make([]byte, 32)
-		weight.FillBytes(weightBytes)
-
-		// Append
-		result = append(result, weightBytes[:]...)
+		// We pad to 32 bytes since abi.encodePacked doesn't pack arrays
+		weightBytes := weight.FillBytes(make([]byte, 32))
+		result = append(result, weightBytes...)
 	}
 
 	return result
