@@ -26,7 +26,7 @@ Only change the strategies if you know what you're doing.
 Next, deploy the Certificate Verifier on the destination chain
 
 ```
-forge script --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --rpc-url $DESTINATION_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCertificateVerifier.sol --sig "run(string,uint32,uint32[])" -- ./script/output/avs_deploy_output.json 0 86400
+forge script --rpc-url $DESTINATION_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCertificateVerifier.sol --sig "run(string,uint32,uint32)" -- ./script/output/avs_deploy_output.json 0 86400
 ```
 
 # Step 2: Setup Operators

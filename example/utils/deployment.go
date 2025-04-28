@@ -100,7 +100,7 @@ func ReadCertificateVerifierDeployment(path string, destinationChainID *big.Int)
 		}
 	}
 
-	return common.Address{}, fmt.Errorf("no certificate verifier deployment found for chain ID %d", targetChainID)
+	return common.Address{}, fmt.Errorf("no certificate verifier deployment found for chain ID %d", destinationChainID)
 }
 
 func (d AVSDeployment) ToConfig() avsregistry.Config {
