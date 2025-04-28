@@ -1,0 +1,8 @@
+{
+    "crossChainDeployments": [
+        {
+            "chainID": 123456,
+            "certificateVerifier": "0xNeedToDeploy"
+        }
+    ]
+}

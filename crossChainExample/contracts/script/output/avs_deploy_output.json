@@ -12,5 +12,6 @@
   "stakeRegistry": "0x47A0B4702EE9c87C7702eF82D679D4B29585c6e2",
   "strategies": [
     "0x5C8b55722f421556a2AAfb7A3EA63d4c3e514312"
-  ]
+  ],
+  "tableCalculator": "0xNeedToDeploy"
 }

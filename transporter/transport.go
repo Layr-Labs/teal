@@ -28,28 +28,18 @@ import (
 
 var (
 	ReadRpcUrlFlag = cli.StringFlag{
-		Name:     "read-rpc-url",
+		Name:     "source-rpc-url",
 		Usage:    "The RPC URL for reading from the TableCalculator",
 		Required: true,
 	}
 	WriteRpcUrlFlag = cli.StringFlag{
-		Name:     "write-rpc-url",
+		Name:     "destination-rpc-url",
 		Usage:    "The RPC URL for writing to the CertificateVerifier",
 		Required: true,
 	}
-	TableCalculatorAddrFlag = cli.StringFlag{
-		Name:     "table-calculator-addr",
-		Usage:    "Address of the BLSTableCalculator contract",
-		Required: true,
-	}
-	CertificateVerifierAddrFlag = cli.StringFlag{
-		Name:     "certificate-verifier-addr",
-		Usage:    "Address of the BLSCertificateVerifier contract",
-		Required: true,
-	}
-	AvsAddressFlag = cli.StringFlag{
-		Name:     "avs-address",
-		Usage:    "Address of the AVS",
+	CertVerifierDeploymentPathFlag = cli.StringFlag{
+		Name:     "avs-cert-verifier-deployment-path",
+		Usage:    "The path to the certificate verifier deployment file",
 		Required: true,
 	}
 	OperatorSetIdFlag = cli.IntFlag{
@@ -58,6 +48,28 @@ var (
 		Required: true,
 	}
 )
+
+func main() {
+	app := cli.NewApp()
+	app.Name = "transporter"
+	app.Usage = "reads operator stakes and transports them to the certificate verifier"
+	app.Version = "0.0.1"
+
+	app.Flags = []cli.Flag{
+		&utils.EcdsaPrivateKeyFlag,
+		&utils.AvsDeploymentPathFlag,
+		&ReadRpcUrlFlag,
+		&WriteRpcUrlFlag,
+		&CertVerifierDeploymentPathFlag,
+		&OperatorSetIdFlag,
+	}
+
+	app.Action = start
+
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
 
 // TODO: make common package??
 func convertOperatorSetInfo(from tableCalculator.IBLSTableCalculatorTypesBN254OperatorSetInfo) certificateVerifier.IBLSTableCalculatorTypesBN254OperatorSetInfo {
@@ -160,29 +172,6 @@ func calculateOperatorInfoTree(
 	return operatorInfoTree, merkleRoot, nil
 }
 
-func main() {
-	app := cli.NewApp()
-	app.Name = "transporter"
-	app.Usage = "does the transporting"
-	app.Version = "0.0.1"
-
-	app.Flags = []cli.Flag{
-		&ReadRpcUrlFlag,
-		&WriteRpcUrlFlag,
-		&utils.EcdsaPrivateKeyFlag,
-		&TableCalculatorAddrFlag,
-		&CertificateVerifierAddrFlag,
-		&AvsAddressFlag,
-		&OperatorSetIdFlag,
-	}
-
-	app.Action = start
-
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
-	}
-}
-
 // TODO: turn this into a process that can be run in the background at a given interval
 func start(c *cli.Context) error {
 	ctx := context.Background()
@@ -239,17 +228,22 @@ func start(c *cli.Context) error {
 		addr,
 	)
 
-	// Initialize addresses & operatorSet Info
-	tableCalculatorAddr := gethcommon.HexToAddress(c.String(TableCalculatorAddrFlag.Name))
-	certificateVerifierAddr := gethcommon.HexToAddress(c.String(CertificateVerifierAddrFlag.Name))
+	// Read deployment files
+	avsDeployment, err := utils.ReadAVSDeployment(c.String(utils.AvsDeploymentPathFlag.Name))
 
-	avsAddress := gethcommon.HexToAddress(c.String(AvsAddressFlag.Name))
+	tableCalculatorAddr := avsDeployment.TableCalculator
+	certificateVerifierAddr, err := utils.ReadCertificateVerifierDeployment(c.String(CertVerifierDeploymentPathFlag.Name), chainID)
+
+	logger.Info("Using addresses",
+		"tableCalculator", tableCalculatorAddr.Hex(),
+		"certificateVerifier", certificateVerifierAddr.Hex(),
+		"avs", avsDeployment.ServiceManager.Hex())
 
 	operatorSetID := c.Int(OperatorSetIdFlag.Name)
 	operatorSetIDUint32 := uint32(operatorSetID)
 
 	operatorSet := tableCalculator.OperatorSet{
-		Avs: avsAddress,
+		Avs: avsDeployment.ServiceManager,
 		Id:  operatorSetIDUint32,
 	}
 

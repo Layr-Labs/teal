@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/avsregistry"
@@ -20,10 +22,20 @@ type EigenLayerDeployment struct {
 type AVSDeployment struct {
 	DeploymentBlock             uint64           `json:"deploymentBlock"`
 	CertificateVerifier         common.Address   `json:"certificateVerifier"`
+	TableCalculator             common.Address   `json:"tableCalculator"`
 	SlashingRegistryCoordinator common.Address   `json:"slashingRegistryCoordinator"`
 	OperatorStateRetriever      common.Address   `json:"operatorStateRetriever"`
 	ServiceManager              common.Address   `json:"serviceManager"`
 	Strategies                  []common.Address `json:"strategies"`
+}
+
+type CertificateVerifierDeployment struct {
+	CertificateVerifier common.Address `json:"certificateVerifier"`
+	ChainID             uint64         `json:"chainID"`
+}
+
+type CertificateVerifierDeployments struct {
+	CrossChainDeployments []CertificateVerifierDeployment `json:"crossChainDeployments"`
 }
 
 func ReadEigenlayerDeployment(path string) (elcontracts.Config, error) {
@@ -64,6 +76,31 @@ func ReadAVSDeployment(path string) (AVSDeployment, error) {
 		return AVSDeployment{}, err
 	}
 	return deployment, nil
+}
+
+func ReadCertificateVerifierDeployment(path string, destinationChainID *big.Int) (common.Address, error) {
+	// Read the JSON file
+	jsonFile, err := os.Open(path)
+	if err != nil {
+		return common.Address{}, fmt.Errorf("failed to open certificate verifier deployment file: %w", err)
+	}
+	defer jsonFile.Close()
+
+	// Parse the JSON
+	var deployments CertificateVerifierDeployments
+	err = json.NewDecoder(jsonFile).Decode(&deployments)
+	if err != nil {
+		return common.Address{}, fmt.Errorf("failed to decode certificate verifier deployment: %w", err)
+	}
+
+	// Find the deployment for the target chain ID
+	for _, deployment := range deployments.CrossChainDeployments {
+		if deployment.ChainID == destinationChainID.Uint64() {
+			return deployment.CertificateVerifier, nil
+		}
+	}
+
+	return common.Address{}, fmt.Errorf("no certificate verifier deployment found for chain ID %d", targetChainID)
 }
 
 func (d AVSDeployment) ToConfig() avsregistry.Config {

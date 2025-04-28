@@ -46,9 +46,15 @@ Now, let's register the operator with EigenLayer and the AVS.
 
 This will register your operator with the AVS and EigenLayer. 
 
-# Step 3: Calculate the operator table and transport to the certificate verifier
+## Step 3: Calculate the operator table and transport to the certificate verifier
 
+Step 1 already deployed an `OperatorTableCalculator` on the source chain and a `CertificateVerifier` on the destination chain. 
 
+Let's read the stakes and transport them. We use the original `PRIVATE_KEY` as the EOA to transport. Make sure it is funded with gas on the destination chain too. 
+
+```
+./transportStakes --source-rpc-url $ETH_RPC_URL --destination-rpc-url $DESTINATION_RPC_URL --ecdsa-private-key $PRIVATE_KEY --operator-set-id 0
+```
 
 # Step 4: Run the Operators
 
@@ -57,7 +63,7 @@ Run the operator first.
 ./start_nodes.sh --rpc-url $ETH_RPC_URL
 ```
 
-# Step 5: Run teh aggregator and begin verifying certificates 
+# Step 5: Run the aggregator and begin verifying certificates 
 In a seperate terminal, run the aggregator.
 ```
 ./start_aggregator.sh --rpc-url $HOLESKY_WSS_URL --private-key $PRIVATE_KEY
