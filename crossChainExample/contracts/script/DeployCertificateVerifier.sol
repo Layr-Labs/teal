@@ -45,12 +45,20 @@ contract DeployCertificateVerifier is Script, Test {
             id: operatorSetId
         });
 
-        // Deploy ProxyAdmin
-        proxyAdmin = new ProxyAdmin();
+        // Deploy BLSCertificateVerifier
+        certificateVerifier = new BLSCertificateVerifier(
+            operatorSet,
+            msg.sender,
+            maxTableStaleness
+        );
 
-        emptyContract = new EmptyContract();
+        // TODO: make this upgradeable
+        // // Deploy ProxyAdmin
+        // proxyAdmin = new ProxyAdmin();
 
-        // Deploy proxy
+        // emptyContract = new EmptyContract();
+
+        // // Deploy proxy
         // certificateVerifier = new BLSCertificateVerifier(
         //     address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
         // );
@@ -60,7 +68,6 @@ contract DeployCertificateVerifier is Script, Test {
         //     address (new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), ""))
         // );
 
-        // TODO: make this upgradeable
         // Upgrade Proxy
         // proxyAdmin.upgradeAndCall(
         //     ITransparentUpgradeableProxy(payable(address(certificateVerifier))),
@@ -76,12 +83,11 @@ contract DeployCertificateVerifier is Script, Test {
 
         vm.stopBroadcast();
 
+
         string memory output = "crossChainDeployment";
         vm.serializeAddress(output, "certificateVerifier", address(certificateVerifier));
-        vm.serializeAddress(output, "certificateVerifierImplementation", address(certificateVerifierImplementation));
-        vm.serializeAddress(output, "proxyAdmin", address(proxyAdmin));
-        vm.serializeAddress(output, "emptyContract", address(emptyContract));
         vm.serializeUint(output, "deploymentBlock", deploymentBlock);
+        vm.serializeUint(output, "chainID", block.chainid);
 
         string memory finalJson = vm.serializeString(output, "object", output);
 
