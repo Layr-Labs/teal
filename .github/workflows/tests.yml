@@ -16,7 +16,7 @@ jobs:
         with:
           go-version: '1.22'
       - name: Unit Test
-        run: cd go && make tests
+        run: cd go && make test
   TestRs:
     name: Rust tests
     runs-on: ubuntu-latest
