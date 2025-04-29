@@ -13,4 +13,3 @@ pub struct OperatorInfo {
     pub socket: String,
     // Other operator info fields would be added here
 }
-

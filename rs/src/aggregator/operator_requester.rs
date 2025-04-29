@@ -39,7 +39,7 @@ impl OperatorRequester for GrpcOperatorRequester {
         task_index: TaskIndex,
         data: &[u8],
     ) -> Result<CertifyResponse> {
-        tracing::info!(operator_address = ?operator_address, "Connecting to operator");
+        tracing::info!(operator_address = ?operator_address, operator_url = %self.operator_url, "Connecting to operator");
         let mut client = NodeServiceClient::connect(self.operator_url.clone())
             .await
             .map_err(|e| anyhow!("Failed to connect to operator: {}", e))?;

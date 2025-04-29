@@ -14,10 +14,9 @@ use eigensdk::services_blsaggregation::bls_agg::{
 use eigensdk::services_blsaggregation::bls_aggregation_service_response::BlsAggregationServiceResponse;
 use eigensdk::types::avs::{TaskIndex, TaskResponseDigest};
 use eigensdk::types::operator::{QuorumNum, QuorumThresholdPercentage};
+use ethers::utils::keccak256;
 use futures::task;
 use operator_requester::OperatorRequester;
-use sha2::Sha256;
-use sha2::Digest;
 use std::io::Cursor;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -32,8 +31,10 @@ pub struct AggregatorService<
     mutex: Mutex<()>,
 }
 
-impl<T: AvsRegistryService + Send + Sync + Clone + 'static, R: OperatorRequester + Clone + 'static>
-    AggregatorService<T, R>
+impl<
+        T: AvsRegistryService + Send + Sync + Clone + 'static,
+        R: OperatorRequester + Clone + 'static,
+    > AggregatorService<T, R>
 {
     pub fn new(
         avs_chain_reader: AvsRegistryChainReader,
@@ -75,7 +76,8 @@ impl<T: AvsRegistryService + Send + Sync + Clone + 'static, R: OperatorRequester
         );
 
         // Initialize task in BLS aggregation service
-        let bls_agg_service = BlsAggregatorService::new(self.avs_registry_service.clone(), get_logger());
+        let bls_agg_service =
+            BlsAggregatorService::new(self.avs_registry_service.clone(), get_logger());
         let (service_handle, mut aggregate_receiver) = bls_agg_service.start();
         service_handle.initialize_task(task_metadata).await?;
         let service_handle = Arc::new(service_handle);
@@ -114,20 +116,17 @@ impl<T: AvsRegistryService + Send + Sync + Clone + 'static, R: OperatorRequester
                     Err(_) => return Ok::<(), anyhow::Error>(()),
                 };
 
-                tracing::info!(operator_id = ?operator_id, "Received signature from operator");
+                tracing::debug!(operator_id = ?operator_id, "Received signature from operator");
 
                 let cursor = Cursor::new(&resp.signature);
                 let signature: BlsSignature =
-                    BlsSignature::deserialize_with_mode(cursor, Compress::Yes, Validate::Yes)
+                    BlsSignature::deserialize_with_mode(cursor, Compress::No, Validate::Yes)
                         .map_err(|e| anyhow!("Failed to deserialize signature: {}", e))?;
                 let signature = Signature::new(signature);
 
                 let task_data = resp.data;
-                let mut hasher = Sha256::new();
-                hasher.update(&task_data);
-                let task_response_digest = B256::from_slice(hasher.finalize().as_ref());
-
-                tracing::info!(operator_id = ?operator_id, "Processing signature from operator");
+                let task_response_digest = B256::from_slice(&keccak256(&task_data));
+                tracing::debug!(operator_id = ?operator_id, "Processing signature from operator");
 
                 return match service_handle
                     .process_signature(TaskSignature::new(

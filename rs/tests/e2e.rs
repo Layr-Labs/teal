@@ -280,7 +280,8 @@ async fn integration_bls_agg() -> Result<()> {
             .expect("Failed to start even loving node");
     });
 
-    let operator_requester = GrpcOperatorRequester::new(operator_socket.clone());
+    let operator_requester =
+        GrpcOperatorRequester::new(format!("http://{}", operator_socket.clone()));
 
     let aggregator = AggregatorService::new(
         avs_registry_chain_reader.clone(),
