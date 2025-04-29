@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  Test:
-    name: Unit Test
+  TestGo:
+    name: Go tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +16,14 @@ jobs:
         with:
           go-version: '1.22'
       - name: Unit Test
-        run: make tests
+        run: cd go && make tests
+  TestRs:
+    name: Rust tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      - name: Unit Test
+        run: cd rs && cargo test
