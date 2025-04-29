@@ -53,7 +53,8 @@ Step 1 already deployed an `OperatorTableCalculator` on the source chain and a `
 Let's read the stakes and transport them. We use the original `PRIVATE_KEY` as the EOA to transport. Make sure it is funded with gas on the destination chain too. 
 
 ```
-./transportStakes --source-rpc-url $ETH_RPC_URL --destination-rpc-url $DESTINATION_RPC_URL --ecdsa-private-key $PRIVATE_KEY --operator-set-id 0
+cd crossChainExample/scripts
+./transport_stakes.sh --source-rpc-url $ETH_RPC_URL --destination-rpc-url $DESTINATION_RPC_URL --ecdsa-private-key $PRIVATE_KEY --operator-set-id 0
 ```
 
 # Step 4: Run the Operators

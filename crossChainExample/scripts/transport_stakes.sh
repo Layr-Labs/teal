@@ -22,6 +22,10 @@ while [ $# -gt 0 ]; do
       OPERATOR_SET_ID="$2"
       shift 2
       ;;
+    --ecdsa-private-key)
+      ECDSA_PRIVATE_KEY="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 --source-rpc-url <source-rpc-url> --destination-rpc-url <destination-rpc-url> --operator-set-id <operator-set-id>"
       exit 0
@@ -47,7 +51,7 @@ echo "Transporting operator stakes from $SOURCE_RPC_URL to $DESTINATION_RPC_URL"
 
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PARENT_DIR=$SCRIPT_DIR/..
+PARENT_DIR="$( cd "$SCRIPT_DIR/../.." && pwd )"
 
 echo "Transporting operator table using ECDSA private key $PRIVATE_KEY"
 
@@ -56,6 +60,6 @@ go run "$PARENT_DIR"/transporter/transport.go \
   --source-rpc-url "$SOURCE_RPC_URL" \
   --destination-rpc-url "$DESTINATION_RPC_URL" \
   --ecdsa-private-key "$PRIVATE_KEY" \
-  --avs-deployment-path "$PARENT_DIR"/contracts/script/output/avs_deploy_output.json \
-  --avs-cert-verifier-deployment-path "$PARENT_DIR"/contracts/script/output/certificate_verifier_deploy_output.json \
+  --avs-deployment-path "$PARENT_DIR"/crossChainExample/contracts/script/output/avs_deploy_output.json \
+  --avs-cert-verifier-deployment-path "$PARENT_DIR"/crossChainExample/contracts/script/output/certificate_verifier_deploy_output.json \
   --operator-set-id "$OPERATOR_SET_ID" 
