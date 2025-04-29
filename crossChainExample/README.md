@@ -17,7 +17,7 @@ For demo purposes, we'll deploy an AVS to EigenLayer's **Holesky Preprod** with 
 
 ```
 cd crossChainExample/contracts
-forge script --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCrossChainAVS.s.sol --sig "run(string,uint256,address[])" -- ./script/input/testnet.json 200 "[0x7d704507b76571a51d9cae8addabbfd0ba0e63d3]"
+forge script --rpc-url $ETH_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCrossChainAVS.s.sol --sig "run(string,uint256,address[])" -- ./script/input/preprod.json 200 "[0x7d704507b76571a51d9cae8addabbfd0ba0e63d3]"
 ```
 See that `example/contracts/script/output/avs_deploy_output.json` has been created.
 

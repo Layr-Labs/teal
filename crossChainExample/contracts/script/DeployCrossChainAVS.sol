@@ -12,7 +12,7 @@ import {IRewardsCoordinator} from "eigenlayer-core/contracts/interfaces/IRewards
 import {IAllocationManager} from "eigenlayer-core/contracts/interfaces/IAllocationManager.sol";
 import {IAVSRegistrar} from "eigenlayer-core/contracts/interfaces/IAVSRegistrar.sol";
 import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
-
+import {BLSLinearSlashableStakeCalculator} from "eigenlayer-middleware/src/crossChain/presets/BLSLinearSlashableStakeCalculator.sol";
 
 import {BLSApkRegistry} from "eigenlayer-middleware/src/BLSApkRegistry.sol";
 import {SlashingRegistryCoordinator} from "eigenlayer-middleware/src/SlashingRegistryCoordinator.sol";
@@ -27,6 +27,7 @@ import {IBLSApkRegistry} from "eigenlayer-middleware/src/interfaces/IBLSApkRegis
 import {ServiceManagerBase} from "eigenlayer-middleware/src/ServiceManagerBase.sol";
 import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/src/SocketRegistry.sol";
 import {IPauserRegistry} from "eigenlayer-core/contracts/interfaces/IPauserRegistry.sol";
+import {AllocationManager} from "eigenlayer-core/contracts/core/AllocationManager.sol";
 import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
 
 import {MinimalServiceManager} from "../src/MinimalServiceManager.sol";
@@ -50,11 +51,13 @@ contract DeployAVS is Script, Test {
     IIndexRegistry public indexRegistry;
     IStakeRegistry public stakeRegistry;
     ISocketRegistry public socketRegistry;
+    BLSLinearSlashableStakeCalculator public tableCalculator;
     OperatorStateRetriever public operatorStateRetriever;
 
     // Implementation contracts
     BLSApkRegistry public apkRegistryImplementation;
     IServiceManager public serviceManagerImplementation;
+    // TODO: make table calculator upgradeable
     ISlashingRegistryCoordinator public slashingRegistryCoordinatorImplementation;
     IIndexRegistry public indexRegistryImplementation;
     IStakeRegistry public stakeRegistryImplementation;
@@ -177,6 +180,12 @@ contract DeployAVS is Script, Test {
             IAllocationManager(eigenlayerDeployment.allocationManager)
         );
 
+        tableCalculator = new BLSLinearSlashableStakeCalculator(
+            apkRegistry,
+            AllocationManager(eigenlayerDeployment.allocationManager),
+            msg.sender
+        );
+
         // Initialize ServiceManagerBase
         avsProxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(payable(address(serviceManager))),
@@ -284,6 +293,7 @@ contract DeployAVS is Script, Test {
         vm.serializeAddress(output, "apkRegistry", address(apkRegistry));
         vm.serializeAddress(output, "socketRegistry", address(socketRegistry));
         vm.serializeAddress(output, "operatorStateRetriever", address(operatorStateRetriever));
+        vm.serializeAddress(output, "tableCalculator", address(tableCalculator));
         vm.serializeAddress(output, "avsProxyAdmin", address(avsProxyAdmin));
         vm.serializeAddress(output, "avsPauserReg", address(avsPauserReg));
         address[] memory strategyAddresses = new address[](strategies.length);
