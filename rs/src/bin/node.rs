@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use eigensdk::crypto_bls::BlsKeyPair;
-use teal::node::server::{BaseNode, Certifier, Config, Node};
+use teal::node::server::{BaseNode, Certifier, Config};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

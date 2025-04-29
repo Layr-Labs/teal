@@ -1,8 +1,6 @@
 use anyhow::Result;
 use ark_serialize::CanonicalSerialize;
 use ethers::utils::keccak256;
-use serde::Serialize;
-use tokio::signal;
 use tonic::{Request, Response, Status};
 
 use eigensdk::crypto_bls::BlsKeyPair;

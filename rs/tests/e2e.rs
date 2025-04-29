@@ -1,33 +1,25 @@
 //! End-to-end integration test for BLS aggregation
 
-use alloy::network::{Ethereum, EthereumWallet, NetworkWallet};
 use alloy::primitives::{Address, Bytes, FixedBytes, U256};
-use alloy::signers::local::PrivateKeySigner;
 use anyhow::Result;
 use async_trait::async_trait;
-use chrono::Local;
-use eigensdk::client_avsregistry::reader::{AvsRegistryChainReader, AvsRegistryReader};
+use eigensdk::client_avsregistry::reader::AvsRegistryChainReader;
 use eigensdk::client_avsregistry::writer::AvsRegistryChainWriter;
-use eigensdk::client_elcontracts::reader::ELChainReader;
 use eigensdk::crypto_bls::BlsKeyPair;
 use eigensdk::logging::log_level::LogLevel;
-use eigensdk::logging::{get_logger, get_test_logger, init_logger};
+use eigensdk::logging::{get_logger, init_logger};
 use eigensdk::services_avsregistry::chaincaller::AvsRegistryServiceChainCaller;
 use eigensdk::services_operatorsinfo::operator_info::OperatorInfoService;
-use eigensdk::services_operatorsinfo::operatorsinfo_inmemory::{
-    OperatorInfoServiceError, OperatorInfoServiceInMemory,
-};
+use eigensdk::services_operatorsinfo::operatorsinfo_inmemory::OperatorInfoServiceError;
 use eigensdk::testing_utils::anvil_constants::{
-    get_allocation_manager_address, get_avs_directory_address, get_delegation_manager_address,
     get_operator_state_retriever_address, get_registry_coordinator_address,
-    get_rewards_coordinator_address, get_service_manager_address,
+    get_service_manager_address,
 };
 use eigensdk::testing_utils::transaction::wait_transaction;
-use eigensdk::types::operator::{OperatorInfo, OperatorPubKeys};
+use eigensdk::types::operator::OperatorPubKeys;
 use ethers::providers::{Http, Middleware, Provider};
 use even_loving::EvenLovingCertifier;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use teal::node::server::{BaseNode, Config};
 use testcontainers::core::IntoContainerPort;
@@ -36,7 +28,6 @@ use testcontainers::runners::AsyncRunner;
 use testcontainers::ImageExt;
 use testcontainers::{ContainerAsync, GenericImage};
 use tokio::spawn;
-use tokio_util::sync::CancellationToken;
 
 pub mod even_loving;
 
@@ -47,30 +38,18 @@ const ANVIL_FIRST_PRIVATE_KEY: &str =
 
 struct ContractAddresses {
     service_manager: Address,
-    allocation_manager: Address,
-    delegation_manager: Address,
-    rewards_coordinator: Address,
-    avs_directory: Address,
     registry_coordinator: Address,
     operator_state_retriever: Address,
 }
 
 async fn get_contract_addresses(http_endpoint: String) -> Result<ContractAddresses> {
     let service_manager = get_service_manager_address(http_endpoint.clone()).await;
-    let allocation_manager = get_allocation_manager_address(http_endpoint.clone()).await;
-    let delegation_manager = get_delegation_manager_address(http_endpoint.clone()).await;
-    let rewards_coordinator = get_rewards_coordinator_address(http_endpoint.clone()).await;
-    let avs_directory = get_avs_directory_address(http_endpoint.clone()).await;
     let registry_coordinator = get_registry_coordinator_address(http_endpoint.clone()).await;
     let operator_state_retriever =
         get_operator_state_retriever_address(http_endpoint.clone()).await;
 
     Ok(ContractAddresses {
         service_manager,
-        allocation_manager,
-        delegation_manager,
-        rewards_coordinator,
-        avs_directory,
         registry_coordinator,
         operator_state_retriever,
     })
@@ -78,9 +57,6 @@ async fn get_contract_addresses(http_endpoint: String) -> Result<ContractAddress
 
 async fn register_operator(
     avs_writer: &AvsRegistryChainWriter,
-    el_reader: &ELChainReader,
-    service_manager: Address,
-    operator_address: Address,
     operator_socket: String,
     bls_key_pair: BlsKeyPair,
     quorum_nums: Bytes,
@@ -181,17 +157,26 @@ struct LocalOperatorInfoService {
     pub_keys: OperatorPubKeys,
 }
 
+impl LocalOperatorInfoService {
+    pub fn new(operator_socket: String, pub_keys: OperatorPubKeys) -> Self {
+        Self {
+            operator_socket,
+            pub_keys,
+        }
+    }
+}
+
 #[async_trait]
 impl OperatorInfoService for LocalOperatorInfoService {
     async fn get_operator_socket(
         &self,
-        operator_address: Address,
+        _operator_address: Address,
     ) -> std::result::Result<Option<String>, OperatorInfoServiceError> {
-        Ok(Some("localhost:8080".to_string()))
+        Ok(Some(self.operator_socket.clone()))
     }
     async fn get_operator_info(
         &self,
-        operator_address: Address,
+        _operator_address: Address,
     ) -> std::result::Result<Option<OperatorPubKeys>, OperatorInfoServiceError> {
         Ok(Some(self.pub_keys.clone()))
     }
@@ -201,25 +186,14 @@ impl OperatorInfoService for LocalOperatorInfoService {
 async fn integration_bls_agg() -> Result<()> {
     init_logger(LogLevel::Debug);
     // Start an Anvil instance
-    let (anvil, anvil_http_endpoint, anvil_ws_endpoint) =
+    let (_anvil, anvil_http_endpoint, anvil_ws_endpoint) =
         start_anvil_with_state("tests/contracts-deployed-anvil-state.json").await;
     println!("anvil_http_endpoint: {}", anvil_http_endpoint);
     println!("anvil_ws_endpoint: {}", anvil_ws_endpoint);
     // Retrieve deployed contract addresses (adjust with your util)
     let contract_addrs = get_contract_addresses(anvil_http_endpoint.clone()).await?;
     let signer_pk_str = ANVIL_FIRST_PRIVATE_KEY.to_string();
-    let wallet = PrivateKeySigner::from_str(signer_pk_str.as_str()).expect("wrong key ");
-    let operator_address = wallet.address();
 
-    let el_chain_reader = ELChainReader::build(
-        get_logger(),
-        contract_addrs.delegation_manager,
-        contract_addrs.avs_directory,
-        contract_addrs.rewards_coordinator,
-        &anvil_http_endpoint,
-    )
-    .await?;
-    // Build AVS registry clients
     let avs_registry_chain_reader = AvsRegistryChainReader::new(
         get_logger(),
         contract_addrs.registry_coordinator,
@@ -245,9 +219,6 @@ async fn integration_bls_agg() -> Result<()> {
 
     register_operator(
         &avs_registry_chain_writer,
-        &el_chain_reader,
-        contract_addrs.service_manager,
-        operator_address,
         operator_socket.clone(),
         bls_key_pair.clone(),
         vec![0].into(),
@@ -257,10 +228,7 @@ async fn integration_bls_agg() -> Result<()> {
 
     let avs_registry_service = AvsRegistryServiceChainCaller::new(
         avs_registry_chain_reader.clone(),
-        LocalOperatorInfoService {
-            operator_socket: operator_socket.clone(),
-            pub_keys: bls_key_pair.clone().into(),
-        },
+        LocalOperatorInfoService::new(operator_socket.clone(), bls_key_pair.clone().into()),
     );
 
     // Start the node server to respond to certification requests

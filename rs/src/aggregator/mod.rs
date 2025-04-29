@@ -12,10 +12,9 @@ use eigensdk::services_blsaggregation::bls_agg::{
     BlsAggregatorService, TaskMetadata, TaskSignature,
 };
 use eigensdk::services_blsaggregation::bls_aggregation_service_response::BlsAggregationServiceResponse;
-use eigensdk::types::avs::{TaskIndex, TaskResponseDigest};
+use eigensdk::types::avs::TaskIndex;
 use eigensdk::types::operator::{QuorumNum, QuorumThresholdPercentage};
 use ethers::utils::keccak256;
-use futures::task;
 use operator_requester::OperatorRequester;
 use std::io::Cursor;
 use std::sync::{Arc, Mutex};

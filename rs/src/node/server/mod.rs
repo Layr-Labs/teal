@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
 use std::net::SocketAddr;
-use std::sync::Arc;
-use tokio::net::TcpListener;
-use tonic::transport::Server;
 
 use crate::{
     api::proto::node::node_service_server::NodeServiceServer, node::service::CertifyingService,
