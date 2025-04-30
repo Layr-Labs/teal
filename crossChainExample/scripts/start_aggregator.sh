@@ -3,9 +3,9 @@
 set -e
 
 # Default values
-SOURCE_RPC_URL="http://0.0.0.0:8545"
-DESTINATION_RPC_URL="http://0.0.0.0:8545"
-OPERATOR_SET_ID=0
+RPC_URL="http://0.0.0.0:8545"
+PRIVATE_KEY=""
+
 
 # Parse named arguments
 while [ $# -gt 0 ]; do
@@ -52,18 +52,16 @@ if [ -z "$PRIVATE_KEY" ]; then
   exit 1
 fi
 
-echo "Transporting operator stakes from $SOURCE_RPC_URL to $DESTINATION_RPC_URL"
-
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PARENT_DIR="$( cd "$SCRIPT_DIR/../.." && pwd )"
 
+# Build the nodes
+PARENT_DIR=$SCRIPT_DIR/..
 
-# Run the transporter
-go run "$PARENT_DIR"/transporter/transport.go \
+go run "$PARENT_DIR"/aggregator/eth_call.go  \
   --source-rpc-url "$SOURCE_RPC_URL" \
   --destination-rpc-url "$DESTINATION_RPC_URL" \
   --ecdsa-private-key "$PRIVATE_KEY" \
-  --avs-deployment-path "$PARENT_DIR"/crossChainExample/contracts/script/output/avs_deploy_output.json \
-  --avs-cert-verifier-deployment-path "$PARENT_DIR"/crossChainExample/contracts/script/output/certificate_verifier_deploy_output.json \
+  --avs-deployment-path "$PARENT_DIR"/contracts/script/output/avs_deploy_output.json \
+  --avs-cert-verifier-deployment-path "$PARENT_DIR"/contracts/script/output/certificate_verifier_deploy_output.json \
   --operator-set-id "$OPERATOR_SET_ID" 

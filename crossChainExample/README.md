@@ -65,7 +65,7 @@ Run the operator first.
 ```
 
 # Step 5: Run the aggregator and begin verifying certificates 
-In a seperate terminal, run the aggregator.
+In a separate terminal, run the aggregator.
 ```
-./start_aggregator.sh --rpc-url $HOLESKY_WSS_URL --private-key $PRIVATE_KEY
+./start_aggregator.sh --source-rpc-url $HOLESKY_WSS_URL --destination-rpc-url $DESTINATION_RPC_URL --ecdsa-private-key $PRIVATE_KEY --operator-set-id 0
 ```

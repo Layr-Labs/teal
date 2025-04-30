@@ -83,7 +83,7 @@ contract DeployCertificateVerifier is Script, Test {
 
         vm.stopBroadcast();
 
-
+        // TODO: get the formatting right
         string memory output = "crossChainDeployment";
         vm.serializeAddress(output, "certificateVerifier", address(certificateVerifier));
         vm.serializeUint(output, "deploymentBlock", deploymentBlock);
