@@ -4,30 +4,30 @@ pragma solidity ^0.8.12;
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {PauserRegistry} from "eigenlayer-core/contracts/permissions/PauserRegistry.sol";
-import {EmptyContract} from "eigenlayer-core/test/mocks/EmptyContract.sol";
-import {IDelegationManager} from "eigenlayer-core/contracts/interfaces/IDelegationManager.sol";
-import {IAVSDirectory} from "eigenlayer-core/contracts/interfaces/IAVSDirectory.sol";
-import {IRewardsCoordinator} from "eigenlayer-core/contracts/interfaces/IRewardsCoordinator.sol";
-import {IAllocationManager} from "eigenlayer-core/contracts/interfaces/IAllocationManager.sol";
-import {IAVSRegistrar} from "eigenlayer-core/contracts/interfaces/IAVSRegistrar.sol";
-import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
+import {PauserRegistry} from "eigenlayer-contracts/src/contracts/permissions/PauserRegistry.sol";
+import {EmptyContract} from "eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
+import {IDelegationManager} from "eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
+import {IAVSDirectory} from "eigenlayer-contracts/src/contracts/interfaces/IAVSDirectory.sol";
+import {IRewardsCoordinator} from "eigenlayer-contracts/src/contracts/interfaces/IRewardsCoordinator.sol";
+import {IAllocationManager} from "eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
+import {IAVSRegistrar} from "eigenlayer-contracts/src/contracts/interfaces/IAVSRegistrar.sol";
+import {IPermissionController} from "eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 
 
-import {BLSApkRegistry} from "eigenlayer-middleware/BLSApkRegistry.sol";
-import {SlashingRegistryCoordinator} from "eigenlayer-middleware/SlashingRegistryCoordinator.sol";
-import {OperatorStateRetriever} from "eigenlayer-middleware/OperatorStateRetriever.sol";
-import {IRegistryCoordinator} from "eigenlayer-middleware/interfaces/IRegistryCoordinator.sol";
-import {IndexRegistry} from "eigenlayer-middleware/IndexRegistry.sol";
-import {IIndexRegistry} from "eigenlayer-middleware/interfaces/IIndexRegistry.sol";
-import {StakeRegistry, IStrategy} from "eigenlayer-middleware/StakeRegistry.sol";
-import {IStakeRegistry, IStakeRegistryTypes} from "eigenlayer-middleware/interfaces/IStakeRegistry.sol";
-import {IServiceManager} from "eigenlayer-middleware/interfaces/IServiceManager.sol";
-import {IBLSApkRegistry} from "eigenlayer-middleware/interfaces/IBLSApkRegistry.sol";
-import {ServiceManagerBase} from "eigenlayer-middleware/ServiceManagerBase.sol";
-import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/SocketRegistry.sol";
-import {IPauserRegistry} from "eigenlayer-core/contracts/interfaces/IPauserRegistry.sol";
-import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/interfaces/ISlashingRegistryCoordinator.sol";
+import {BLSApkRegistry} from "eigenlayer-middleware/src/BLSApkRegistry.sol";
+import {SlashingRegistryCoordinator} from "eigenlayer-middleware/src/SlashingRegistryCoordinator.sol";
+import {OperatorStateRetriever} from "eigenlayer-middleware/src/OperatorStateRetriever.sol";
+import {IRegistryCoordinator} from "eigenlayer-middleware/src/interfaces/IRegistryCoordinator.sol";
+import {IndexRegistry} from "eigenlayer-middleware/src/IndexRegistry.sol";
+import {IIndexRegistry} from "eigenlayer-middleware/src/interfaces/IIndexRegistry.sol";
+import {StakeRegistry, IStrategy} from "eigenlayer-middleware/src/StakeRegistry.sol";
+import {IStakeRegistry, IStakeRegistryTypes} from "eigenlayer-middleware/src/interfaces/IStakeRegistry.sol";
+import {IServiceManager} from "eigenlayer-middleware/src/interfaces/IServiceManager.sol";
+import {IBLSApkRegistry} from "eigenlayer-middleware/src/interfaces/IBLSApkRegistry.sol";
+import {ServiceManagerBase} from "eigenlayer-middleware/src/ServiceManagerBase.sol";
+import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/src/SocketRegistry.sol";
+import {IPauserRegistry} from "eigenlayer-contracts/src/contracts/interfaces/IPauserRegistry.sol";
+import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
 
 import {MinimalServiceManager} from "../src/MinimalServiceManager.sol";
 import {MinimalCertificateVerifier} from "../src/MinimalCertificateVerifier.sol";
@@ -75,23 +75,8 @@ contract DeployAVS is Script, Test {
         string memory inputConfigPath,
         uint256 maxOperatorCount,
         IStrategy[] memory strategies
-    ) external {
-        // read the json file
-        string memory inputConfig = vm.readFile(inputConfigPath);
-        EigenlayerDeployment memory eigenlayerDeployment = EigenlayerDeployment({
-            allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
-            delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
-            permissionController: stdJson.readAddress(inputConfig, ".permissionController"),
-            rewardsCoordinator: stdJson.readAddress(inputConfig, ".rewardsCoordinator"),
-            avsDirectory: stdJson.readAddress(inputConfig, ".avsDirectory")
-        });
-
-
-        emit log_named_address("allocation manager", eigenlayerDeployment.allocationManager);
-        emit log_named_address("delegation manager", eigenlayerDeployment.delegationManager);
-        emit log_named_address("permission controller", eigenlayerDeployment.permissionController);
-        emit log_named_address("rewards coordinator", eigenlayerDeployment.rewardsCoordinator);
-        emit log_named_address("avs directory", eigenlayerDeployment.avsDirectory);
+    ) public virtual {
+        EigenlayerDeployment memory eigenlayerDeployment = parseConfig(inputConfigPath);
 
         // only a lower bound for the deployment block number
         uint256 deploymentBlock = block.number;
@@ -201,7 +186,8 @@ contract DeployAVS is Script, Test {
                 indexRegistry,
                 socketRegistry,
                 IAllocationManager(eigenlayerDeployment.allocationManager),
-                avsPauserReg
+                avsPauserReg,
+                "1.0.0"
             );
 
         {
@@ -250,6 +236,17 @@ contract DeployAVS is Script, Test {
             IAllocationManager(eigenlayerDeployment.allocationManager).setAVSRegistrar(
                 address(serviceManager),
                 IAVSRegistrar(slashingRegistryCoordinator)
+            );
+
+            serviceManager.setAppointee(
+                msg.sender,
+                eigenlayerDeployment.allocationManager,
+                IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI.selector
+            );
+
+            IAllocationManager(eigenlayerDeployment.allocationManager).updateAVSMetadataURI(
+                address(serviceManager),
+                "TEST AVS"
             );
 
              // give slashingregistrycoordindator permission to createTotalDelegatedStakeQuorum
@@ -304,5 +301,25 @@ contract DeployAVS is Script, Test {
 
         vm.createDir("./script/output", true);
         vm.writeJson(finalJson, "./script/output/avs_deploy_output.json");     
+    }
+
+    function parseConfig(
+        string memory inputConfigPath
+    ) public virtual returns (EigenlayerDeployment memory eigenlayerDeployment) {
+        // read the json file
+        string memory inputConfig = vm.readFile(inputConfigPath);
+        eigenlayerDeployment = EigenlayerDeployment({
+            allocationManager: stdJson.readAddress(inputConfig, ".allocationManager"),
+            delegationManager: stdJson.readAddress(inputConfig, ".delegationManager"),
+            permissionController: stdJson.readAddress(inputConfig, ".permissionController"),
+            rewardsCoordinator: stdJson.readAddress(inputConfig, ".rewardsCoordinator"),
+            avsDirectory: stdJson.readAddress(inputConfig, ".avsDirectory")
+        });
+
+        emit log_named_address("allocation manager", eigenlayerDeployment.allocationManager);
+        emit log_named_address("delegation manager", eigenlayerDeployment.delegationManager);
+        emit log_named_address("permission controller", eigenlayerDeployment.permissionController);
+        emit log_named_address("rewards coordinator", eigenlayerDeployment.rewardsCoordinator);
+        emit log_named_address("avs directory", eigenlayerDeployment.avsDirectory);
     }
 }
