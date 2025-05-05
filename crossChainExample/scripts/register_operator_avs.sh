@@ -40,6 +40,7 @@ PARENT_DIR=$SCRIPT_DIR/..
 for file in "$SCRIPT_DIR"/operators/*.json; do
   echo "Starting node from $file"
   if [ -r "$file" ]; then
+    echo "Processing $file"
     BLS_PRIVATE_KEY=$(jq -r '.bls_private_key' "$file")
     ECDSA_PRIVATE_KEY=$(jq -r '.ecdsa_private_key' "$file")
     SOCKET=$(jq -r '.socket' "$file")

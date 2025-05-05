@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 	"os"
@@ -233,7 +234,9 @@ func start(c *cli.Context) error {
 
 	tableCalculatorAddr := avsDeployment.TableCalculator
 	certificateVerifierAddr, err := utils.ReadCertificateVerifierDeployment(c.String(CertVerifierDeploymentPathFlag.Name), chainID)
-
+	if err != nil {
+		return err
+	}
 	logger.Info("Using addresses",
 		"tableCalculator", tableCalculatorAddr.Hex(),
 		"certificateVerifier", certificateVerifierAddr.Hex(),
@@ -251,7 +254,7 @@ func start(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("certificateVerifierAddr", certificateVerifierAddr)
 	certVerifier, err := certificateVerifier.NewBLSCertificateVerifier(certificateVerifierAddr, writeClient)
 	if err != nil {
 		return err
