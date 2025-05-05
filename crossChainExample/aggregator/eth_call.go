@@ -20,6 +20,7 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/types"
 	BLSCertificateVerifier "github.com/Layr-Labs/teal/transporter/bindings/BLSCertificateVerifier"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -250,14 +251,20 @@ func start(c *cli.Context) error {
 				return
 			}
 
+			// TODO: query this against latest stake table update
+			referenceTimestamp, err := certVerifier.LatestReferenceTimestamp(&bind.CallOpts{})
+
+			if err != nil {
+				logger.Error("Failed to get latest reference timestamp", "error", err)
+				return
+			}
+			logger.Info("Latest reference timestamp", "referenceTimestamp", referenceTimestamp)
+
 			txOpts, err := txManager.GetNoSendTxOpts()
 			if err != nil {
 				logger.Error("Failed to get tx opts", "error", err)
 				return
 			}
-
-			// TODO: query this against latest stake table update
-			referenceTimestamp := uint32(1745965200)
 
 			tx, err := certVerifier.VerifyCertificate(
 				txOpts,

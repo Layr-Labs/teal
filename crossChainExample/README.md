@@ -1,6 +1,6 @@
-# Teal Example
+# Teal Cross CHain Example
 
-This example will take you end to end through deploying a minimal AVS that uses BLS aggregation to verify operator signatures on a SIMPLE TASK.
+This example will take you end to end through deploying a minimal AVS that uses BLS aggregation to verify operator signatures on a SIMPLE TASK. The AVS is deployed on the source chain and the verification is done on the destination. 
 
 ## Step 0: Setup Environment
 
@@ -28,6 +28,7 @@ Next, deploy the Certificate Verifier on the destination chain
 ```
 forge script --rpc-url $DESTINATION_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast script/DeployCertificateVerifier.s.sol --sig "run(string,uint32,uint32)" -- ./script/output/avs_deploy_output.json 0 86400
 ```
+Lastly, update the `certificate_verifier_deploy_output.json` file with the output data in `certificateVerifier_deploy_output.json`. The output will be fixed soon. 
 
 # Step 2: Setup Operators
 
