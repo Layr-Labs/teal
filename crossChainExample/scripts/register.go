@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"log"
 	"log/slog"
 	"os"
@@ -153,49 +154,79 @@ func start(c *cli.Context) error {
 			logger.Info("Registered operator with EigenLayer", "tx", reciept.TxHash.Hex())
 		}
 	}
+	shares, err := elReader.GetSlashableShares(context.Background(), common.HexToAddress(operator.Address), contractAllocationManager.OperatorSet{
+		Avs: avsDeployment.ServiceManager,
+		Id:  0,
+	}, avsDeployment.Strategies)
+	if err != nil {
+		panic(err)
+	}
 
-	reciept, err := elWriter.ModifyAllocations(context.Background(), common.HexToAddress(operator.Address), []contractAllocationManager.IAllocationManagerTypesAllocateParams{
-		{
-			OperatorSet: contractAllocationManager.OperatorSet{
-				Avs: avsDeployment.ServiceManager,
-				Id:  0,
+	isOperatorAllocated := false
+	for _, share := range shares {
+		if share.Cmp(common.Big0) != 0 {
+			isOperatorAllocated = true
+			break
+		}
+	}
+
+	if isOperatorAllocated {
+		logger.Info("Operator already allocated", "address", operator.Address)
+	} else {
+		reciept, err := elWriter.ModifyAllocations(context.Background(), common.HexToAddress(operator.Address), []contractAllocationManager.IAllocationManagerTypesAllocateParams{
+			{
+				OperatorSet: contractAllocationManager.OperatorSet{
+					Avs: avsDeployment.ServiceManager,
+					Id:  0,
+				},
+				Strategies:    avsDeployment.Strategies,
+				NewMagnitudes: []uint64{100000},
 			},
-			Strategies:    avsDeployment.Strategies,
-			NewMagnitudes: []uint64{100000},
-		},
-	}, true)
+		}, true)
+		if err != nil {
+			logger.Error("Failed to modify allocations", "error", err)
+			return err
+		} else {
+			logger.Info("Modified allocations", "tx", reciept.TxHash.Hex())
+		}
+	}
+
+	isOperatorRegisteredForOperatorSet, err := elReader.IsOperatorRegisteredWithOperatorSet(context.Background(), common.HexToAddress(operator.Address), contractAllocationManager.OperatorSet{
+		Avs: avsDeployment.ServiceManager,
+		Id:  0,
+	})
 	if err != nil {
-		logger.Error("Failed to modify allocations", "error", err)
-		return err
+		panic(err)
+	}
+
+	if isOperatorRegisteredForOperatorSet {
+		logger.Info("Operator already registered for operator set", "address", operator.Address)
 	} else {
-		logger.Info("Modified allocations", "tx", reciept.TxHash.Hex())
-	}
+		registrationRequest := elcontracts.RegistrationRequest{
+			OperatorAddress: common.HexToAddress(operator.Address),
+			AVSAddress:      avsDeployment.ServiceManager,
+			OperatorSetIds:  []uint32{0},
+			WaitForReceipt:  true,
+			BlsKeyPair:      utils.NewBlsKeyPairPanics(c.String(BlsPrivateKeyFlag.Name)),
+			Socket:          c.String(SocketFlag.Name),
+		}
+		// register for operator set through allocationManager
+		reciept, err := elWriter.RegisterForOperatorSets(
+			context.Background(),
+			avsDeployment.SlashingRegistryCoordinator,
+			registrationRequest,
+		)
+		if err != nil {
+			// print hex of the error
+			logger.Error("Failed to register operator with AVS", "error", hex.EncodeToString([]byte(err.Error())))
+			return err
+		}
 
-	registrationRequest := elcontracts.RegistrationRequest{
-		OperatorAddress: common.HexToAddress(operator.Address),
-		AVSAddress:      avsDeployment.ServiceManager,
-		OperatorSetIds:  []uint32{0},
-		WaitForReceipt:  true,
-		BlsKeyPair:      utils.NewBlsKeyPairPanics(c.String(BlsPrivateKeyFlag.Name)),
-		Socket:          c.String(SocketFlag.Name),
-	}
-
-	// register for operator set through allocationManager
-	reciept, err = elWriter.RegisterForOperatorSets(
-		context.Background(),
-		avsDeployment.SlashingRegistryCoordinator,
-		registrationRequest,
-	)
-
-	if err != nil {
-		logger.Error("Failed to register operator with AVS", "error", err)
-		return err
-	}
-
-	if reciept.Status == 0 {
-		logger.Error("Failed to register operator with AVS", "receipt", reciept)
-	} else {
-		logger.Info("Registered operator with AVS", "tx", reciept.TxHash.Hex())
+		if reciept.Status == 0 {
+			logger.Error("Failed to register operator with AVS", "receipt", reciept)
+		} else {
+			logger.Info("Registered operator with AVS", "tx", reciept.TxHash.Hex())
+		}
 	}
 	return nil
 }

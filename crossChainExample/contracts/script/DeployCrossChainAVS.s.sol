@@ -13,7 +13,7 @@ import {IAllocationManager} from "eigenlayer-core/contracts/interfaces/IAllocati
 import {IAVSRegistrar} from "eigenlayer-core/contracts/interfaces/IAVSRegistrar.sol";
 import {IPermissionController} from "eigenlayer-core/contracts/interfaces/IPermissionController.sol";
 import {BLSLinearSlashableStakeCalculator} from "eigenlayer-middleware/src/crossChain/presets/BLSLinearSlashableStakeCalculator.sol";
-
+import {OperatorSet} from "eigenlayer-core/contracts/libraries/OperatorSetLib.sol";
 import {BLSApkRegistry} from "eigenlayer-middleware/src/BLSApkRegistry.sol";
 import {SlashingRegistryCoordinator} from "eigenlayer-middleware/src/SlashingRegistryCoordinator.sol";
 import {OperatorStateRetriever} from "eigenlayer-middleware/src/OperatorStateRetriever.sol";
@@ -29,7 +29,7 @@ import {ISocketRegistry, SocketRegistry} from "eigenlayer-middleware/src/SocketR
 import {IPauserRegistry} from "eigenlayer-core/contracts/interfaces/IPauserRegistry.sol";
 import {AllocationManager} from "eigenlayer-core/contracts/core/AllocationManager.sol";
 import {ISlashingRegistryCoordinator, ISlashingRegistryCoordinatorTypes} from "eigenlayer-middleware/src/interfaces/ISlashingRegistryCoordinator.sol";
-
+import {LinearSlashableStakeCalculator} from "eigenlayer-middleware/src/crossChain/stakeCalculators/LinearSlashableStakeCalculator.sol";
 import {MinimalServiceManager} from "../src/MinimalServiceManager.sol";
 
 import "forge-std/Test.sol";
@@ -283,6 +283,23 @@ contract DeployAVS is Script, Test {
 
         operatorStateRetriever = new OperatorStateRetriever();
 
+        // Set the multipliers on the table calculator
+        OperatorSet memory operatorSet = OperatorSet({
+            avs: address(serviceManager),
+            id: 0
+        });
+        LinearSlashableStakeCalculator.StrategyAndMultiplier[] memory strategyAndMultipliers = new LinearSlashableStakeCalculator.StrategyAndMultiplier[](strategies.length);
+        for (uint i = 0; i < strategies.length; i++) {
+            strategyAndMultipliers[i] = LinearSlashableStakeCalculator.StrategyAndMultiplier({
+                strategy: address(strategies[i]),
+                multiplier: 1 ether
+            });
+        }
+        tableCalculator.setStrategyMultipliers(
+            operatorSet,
+            strategyAndMultipliers
+        );
+
         vm.stopBroadcast();
 
         string memory output = "deployment";
@@ -309,3 +326,4 @@ contract DeployAVS is Script, Test {
         vm.writeJson(finalJson, "./script/output/avs_deploy_output.json");     
     }
 }
+

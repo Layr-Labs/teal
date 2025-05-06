@@ -1,9 +1,9 @@
 {
     "crossChainDeployments": [
         {
-            "chainID": 11155111,
+            "chainID": 17000,
             "deploymentBlock": 8222161,
-            "certificateVerifier": "0xFf76Fcb33d241b8108dD762E4e485a3C90772c50"
+            "certificateVerifier": "0xf35b4c4537d0F8A7579323ba05983D1680E9F7bE"
         }
     ]
 }
